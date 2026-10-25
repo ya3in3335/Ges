@@ -1,0 +1,40 @@
+# Cloudflare Worker for the association API + Telegram verification bot webhook.
+# Secrets are NOT stored here. Set them with `wrangler secret put <NAME>` (see docs/DEPLOYMENT.md).
+name = "association-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-30"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Public, non-secret configuration.
+TELEGRAM_BOT_USERNAME = ""          # e.g. "MyAssociationBot" (without @)
+ALLOWED_ORIGINS = ""                # comma-separated admin dashboard origins, e.g. "https://admin.example.org"
+PUBLIC_BASE_URL = ""                # e.g. "https://api.example.org" (used for R2 media URLs)
+ACCESS_TOKEN_TTL_SECONDS = "900"
+REFRESH_TOKEN_TTL_DAYS = "30"
+VERIFICATION_TTL_SECONDS = "600"
+EMAIL_FROM = ""                     # sender address when RESEND_API_KEY is configured
+
+[[d1_databases]]
+binding = "DB"
+database_name = "association_db"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# Optional: uncomment after creating the bucket (`wrangler r2 bucket create association-media`).
+# Without this binding, media must be added as external URLs (e.g. YouTube) and uploads are disabled.
+# [[r2_buckets]]
+# binding = "MEDIA"
+# bucket_name = "association-media"
+
+# Channel-notification retries and housekeeping.
+[triggers]
+crons = ["*/10 * * * *"]
+
+# Secrets (wrangler secret put):
+#   JWT_SECRET                 random ≥ 32 bytes
+#   TELEGRAM_BOT_TOKEN         from @BotFather
+#   TELEGRAM_WEBHOOK_SECRET    random [A-Za-z0-9_-]{32,256}
+#   TELEGRAM_ADMIN_CHANNEL_ID  e.g. -1001234567890 (bot must be channel admin with post permission)
+#   FCM_SERVICE_ACCOUNT_JSON   optional, Firebase service-account JSON for push delivery
+#   RESEND_API_KEY             optional, enables email verification / reset e-mails
