@@ -75,7 +75,7 @@ fun AboutScreen(back: () -> Unit, vm: AboutViewModel = hiltViewModel()) {
                     val m = s.data
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         // Official logo, proportions preserved.
-                        Image(painterResource(R.drawable.logo), locOrNull(m["association_name_ar"], m["association_name_fr"]), Modifier.fillMaxWidth(0.8f))
+                        dz.association.app.ui.components.LogoImage(Modifier.fillMaxWidth(0.8f), locOrNull(m["association_name_ar"], m["association_name_fr"]))
                         locOrNull(m["association_name_ar"], m["association_name_fr"])?.let { Text(it, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center) }
                         Text(locOrNull(m["about_ar"], m["about_fr"]) ?: stringResource(R.string.about_empty), style = MaterialTheme.typography.bodyLarge)
                         AppCard(Modifier.fillMaxWidth()) {

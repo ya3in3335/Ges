@@ -121,7 +121,7 @@ fun LoginScreen(back: () -> Unit, nav: (String) -> Unit, onDone: () -> Unit, vm:
             Modifier.fillMaxSize().padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Image(painterResource(R.drawable.logo), null, Modifier.height(110.dp))
+            dz.association.app.ui.components.LogoImage(Modifier.height(110.dp))
             OutlinedTextField(id, { id = it }, label = { Text(stringResource(R.string.identifier)) }, singleLine = true, textStyle = ltr,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth().testTag("login_identifier"))
             PasswordField(pw, { pw = it }, stringResource(R.string.password), Modifier.testTag("login_password"))

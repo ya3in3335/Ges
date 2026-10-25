@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -225,3 +226,20 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
     }
 }
 
+
+/**
+ * The official logo, proportions preserved. In dark theme it sits on a white plate so the
+ * maroon lettering stays legible without recolouring the artwork.
+ */
+@Composable
+fun LogoImage(modifier: Modifier = Modifier, contentDescription: String? = null) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val img = @Composable {
+        androidx.compose.foundation.Image(
+            androidx.compose.ui.res.painterResource(R.drawable.logo), contentDescription,
+            contentScale = ContentScale.Fit, modifier = if (dark) Modifier.padding(6.dp) else Modifier,
+        )
+    }
+    if (dark) Surface(color = Color.White, shape = MaterialTheme.shapes.medium, modifier = modifier) { img() }
+    else Box(modifier) { img() }
+}

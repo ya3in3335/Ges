@@ -12,7 +12,7 @@ export const PUBLIC_SETTING_KEYS = [
   'association_name_ar', 'association_name_fr', 'association_short_description_ar', 'association_short_description_fr',
   'about_ar', 'about_fr', 'contact_phone', 'contact_email', 'contact_address_ar', 'contact_address_fr',
   'facebook_url', 'instagram_url', 'youtube_url', 'website_url', 'telegram_channel_url',
-  'latest_app_version', 'latest_app_version_code', 'apk_url', 'min_supported_version_code',
+  'latest_app_version', 'latest_app_version_code', 'apk_url', 'apk_sha256', 'min_supported_version_code',
 ] as const;
 
 const donationDto = (d: Record<string, unknown> | null) => ({

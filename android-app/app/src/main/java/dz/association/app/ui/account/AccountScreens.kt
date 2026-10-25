@@ -142,7 +142,7 @@ fun AccountScreen(nav: (String) -> Unit, vm: AccountViewModel = hiltViewModel())
             if (u == null) {
                 AppCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Image(painterResource(R.drawable.logo), null, Modifier.height(90.dp))
+                        dz.association.app.ui.components.LogoImage(Modifier.height(90.dp))
                         Text(stringResource(R.string.account_guest_title), style = MaterialTheme.typography.titleLarge)
                         Text(stringResource(R.string.account_guest_body), style = MaterialTheme.typography.bodyMedium)
                         PrimaryButton(stringResource(R.string.login), { nav(Routes.LOGIN) })

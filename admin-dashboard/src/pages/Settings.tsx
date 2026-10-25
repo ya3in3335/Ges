@@ -8,7 +8,7 @@ const KEYS: [string, string, boolean?][] = [
   ['about_ar', 'التعريف بالجمعية (عربية)', true], ['about_fr', 'Présentation (français)', true],
   ['contact_phone', 'هاتف الاتصال'], ['contact_email', 'البريد الإلكتروني'], ['contact_address_ar', 'العنوان (عربية)'], ['contact_address_fr', 'Adresse (français)'],
   ['website_url', 'الموقع (https)'], ['facebook_url', 'Facebook (https)'], ['instagram_url', 'Instagram (https)'], ['youtube_url', 'YouTube (https)'], ['telegram_channel_url', 'قناة تيليغرام العامة (https)'],
-  ['latest_app_version', 'آخر إصدار للتطبيق (مثال 1.0.0)'], ['latest_app_version_code', 'رقم الإصدار (versionCode)'], ['apk_url', 'رابط تنزيل APK (https)'], ['min_supported_version_code', 'أدنى إصدار مدعوم'],
+  ['latest_app_version', 'آخر إصدار للتطبيق (مثال 1.0.0)'], ['latest_app_version_code', 'رقم الإصدار (versionCode)'], ['apk_url', 'رابط تنزيل APK (https)'], ['apk_sha256', 'بصمة SHA-256 لملف APK'], ['min_supported_version_code', 'أدنى إصدار مدعوم'],
 ];
 
 export default function Settings() {

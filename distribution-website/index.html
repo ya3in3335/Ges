@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- HTTPS URL of the association API (Cloudflare Worker), used to read the current app version. -->
+  <meta name="api-base" content="https://api.example.invalid">
+  <title>تطبيق الجمعية لأندرويد</title>
+  <meta name="description" content="التطبيق الرسمي للجمعية على أندرويد: الأخبار، النشاطات، التطوع والتصويت.">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="top">
+    <img src="assets/logo.webp" alt="شعار الجمعية" class="logo" width="160" height="104" data-i18n-alt="logoAlt">
+    <button class="lang" id="lang" type="button" aria-label="Français">Français</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <h1 data-i18n="title">التطبيق الرسمي للجمعية</h1>
+        <p class="lead" data-i18n="lead">تابع أخبار الجمعية ونشاطاتها، سجّل كمتطوع، وشارك في التصويت — كل ذلك من هاتفك.</p>
+        <a class="download" id="download" href="#install" aria-disabled="true">
+          <span data-i18n="download">تنزيل التطبيق لأندرويد (APK)</span>
+          <small id="version" data-i18n="soon">سيتوفر قريباً</small>
+        </a>
+        <p class="hint" data-i18n="requirements">يتطلب أندرويد 7.0 أو أحدث. مجاني وبدون إعلانات.</p>
+        <p class="hint" id="checksum" hidden></p>
+      </div>
+      <div class="phones" aria-label="لقطات من التطبيق" data-i18n-aria="shots">
+        <img src="assets/screens/home_light.webp" alt="الصفحة الرئيسية (محتوى توضيحي)" data-i18n-alt="shotHome" loading="lazy" width="270" height="585">
+        <img src="assets/screens/intro.webp" alt="مقدمة التطبيق المتحركة" data-i18n-alt="shotIntro" loading="lazy" width="270" height="600">
+        <img src="assets/screens/home_dark.webp" alt="الوضع الداكن (محتوى توضيحي)" data-i18n-alt="shotDark" loading="lazy" width="270" height="585">
+      </div>
+    </section>
+    <p class="note" data-i18n="shotNote">اللقطات للتوضيح وتحتوي على أمثلة؛ المحتوى الفعلي تنشره الجمعية.</p>
+
+    <section>
+      <h2 data-i18n="featuresTitle">ماذا يقدم التطبيق؟</h2>
+      <ul class="features">
+        <li><b data-i18n="f1t">الأخبار والإعلانات</b><span data-i18n="f1">آخر أخبار الجمعية مع إمكانية القراءة دون اتصال.</span></li>
+        <li><b data-i18n="f2t">النشاطات والحملات</b><span data-i18n="f2">مواعيد النشاطات وأماكنها والتسجيل للمشاركة.</span></li>
+        <li><b data-i18n="f3t">التطوع</b><span data-i18n="f3">قدّم طلب تطوع وتابع حالته والمهام المسندة إليك.</span></li>
+        <li><b data-i18n="f4t">التصويت</b><span data-i18n="f4">تصويت آمن: صوت واحد لكل حساب مؤكد، مع إمكانية التصويت السري.</span></li>
+        <li><b data-i18n="f5t">تأكيد الرقم عبر تيليغرام</b><span data-i18n="f5">بدون رسائل SMS: مشاركة رقمك عبر بوت الجمعية الرسمي.</span></li>
+        <li><b data-i18n="f6t">الصور والفيديوهات</b><span data-i18n="f6">معرض لصور ومقاطع النشاطات.</span></li>
+        <li><b data-i18n="f7t">التبرعات</b><span data-i18n="f7">معلومات التبرع الرسمية (بدون أي دفع داخل التطبيق).</span></li>
+        <li><b data-i18n="f8t">عربي وفرنسي</b><span data-i18n="f8">واجهة عربية كاملة مع دعم اللغة الفرنسية، ووضع داكن.</span></li>
+      </ul>
+    </section>
+
+    <section id="install">
+      <h2 data-i18n="installTitle">طريقة التثبيت</h2>
+      <ol class="steps">
+        <li data-i18n="s1">اضغط على زر التنزيل أعلاه من هاتفك.</li>
+        <li data-i18n="s2">افتح الملف الذي تم تنزيله. إذا طُلب منك ذلك، اسمح للمتصفح بتثبيت التطبيقات من هذا المصدر (الإعدادات ← الأمان).</li>
+        <li data-i18n="s3">اضغط «تثبيت» ثم افتح التطبيق.</li>
+        <li data-i18n="s4">لتحديث التطبيق، نزّل الإصدار الجديد من هذه الصفحة وثبّته فوق الإصدار الحالي — تبقى بياناتك محفوظة.</li>
+      </ol>
+      <p class="warn" data-i18n="official">نزّل التطبيق من هذه الصفحة فقط. لا تثبّت نسخاً من مصادر أخرى.</p>
+    </section>
+
+    <section id="contact">
+      <h2 data-i18n="contactTitle">اتصل بنا</h2>
+      <p id="contact-lines" data-i18n="contactSoon">ستُنشر معلومات الاتصال الرسمية قريباً.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="privacy.html" data-i18n="privacy">سياسة الخصوصية</a>
+  </footer>
+  <script src="assets/site.js" defer></script>
+</body>
+</html>

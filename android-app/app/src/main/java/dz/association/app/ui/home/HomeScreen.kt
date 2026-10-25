@@ -69,6 +69,8 @@ import dz.association.app.core.util.loc
 import dz.association.app.data.AuthRepository
 import dz.association.app.data.ContentRepository
 import dz.association.app.ui.components.AppCard
+import dz.association.app.ui.components.LogoImage
+import dz.association.app.ui.theme.Brand
 import dz.association.app.ui.components.ErrorState
 import dz.association.app.ui.components.OfflineBanner
 import dz.association.app.ui.components.Pill
@@ -130,11 +132,9 @@ private fun HomeHeader(user: User?, settings: Map<String, String>, nav: (String)
     Box(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
         Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painterResource(R.drawable.logo),
+                LogoImage(
+                    Modifier.height(64.dp).width(98.dp),
                     contentDescription = settings["association_name_ar"]?.let { loc(it, settings["association_name_fr"]) } ?: stringResource(R.string.app_name),
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.height(64.dp).width(98.dp),
                 )
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = { nav(Routes.NOTIFICATIONS) }) { Icon(Icons.Outlined.Notifications, stringResource(R.string.menu_notifications)) }
@@ -166,7 +166,7 @@ private fun QuickLinks(nav: (String) -> Unit) {
 }
 
 @Composable
-private fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: (String) -> Unit) {
+internal fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: (String) -> Unit) {
     val ctx = LocalContext.current
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         item { HomeHeader(user, d.settings, nav) }
@@ -206,7 +206,7 @@ private fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: (
             }
         }
         item {
-            CallToAction(stringResource(R.string.home_volunteer_title), stringResource(R.string.home_volunteer_body), MaterialTheme.colorScheme.primary) { nav(Routes.VOLUNTEER) }
+            CallToAction(stringResource(R.string.home_volunteer_title), stringResource(R.string.home_volunteer_body), Brand.Maroon) { nav(Routes.VOLUNTEER) }
         }
         if (d.recentNews.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.home_news), onSeeAll = { nav(Routes.NEWS) }) }
@@ -221,7 +221,7 @@ private fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: (
             }
         }
         item {
-            CallToAction(stringResource(R.string.home_donate_title), stringResource(R.string.home_donate_body), MaterialTheme.colorScheme.secondary) { nav(Routes.DONATIONS) }
+            CallToAction(stringResource(R.string.home_donate_title), stringResource(R.string.home_donate_body), Color(0xFFB4561B)) { nav(Routes.DONATIONS) }
         }
         val phone = d.settings["contact_phone"]
         val email = d.settings["contact_email"]
