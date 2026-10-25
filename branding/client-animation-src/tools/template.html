@@ -1,0 +1,394 @@
+<title>موشن شعار التنسيقية</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single dark "stage" — the film fills the top, the transport bar and the layer breakdown sit under it. Single committed look taken from the logo's own maroon + sun-orange. */
+:root{
+  --bg:#170c0f;          /* deep maroon-black, from the lettering */
+  --panel:#22131a;
+  --line:#3a2329;
+  --fg:#f6ebe6;
+  --muted:#b49a93;
+  --sun:#f2832c;         /* the tower's orange */
+  --sun-2:#e8432a;
+  --maroon:#8b2b3d;
+  --f-display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 36px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(22px,3.4vw,32px);margin:0;letter-spacing:0;text-wrap:balance}
+h1 span{color:var(--sun)}
+.sub{color:var(--muted);margin:0;font-size:14px}
+.stage{position:relative;background:#000;border-radius:14px;overflow:hidden;border:1px solid var(--line);display:flex;justify-content:center;align-items:center}
+.stage canvas{display:block;max-width:100%;height:auto}
+.stage.v canvas{max-height:72vh;width:auto}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.btn{font:inherit;font-weight:600;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px}
+.btn:hover{border-color:var(--sun)}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,.layer:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+.btn.primary{background:linear-gradient(180deg,var(--sun),var(--sun-2));border-color:transparent;color:#1b0b07}
+.btn svg{width:16px;height:16px;fill:currentColor}
+.time{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;min-width:92px;text-align:center}
+.scrub{flex:1 1 220px;min-width:0;accent-color:var(--sun);height:28px}
+.chips{display:flex;gap:6px}
+.chip{font:inherit;font-size:13px;font-family:var(--f-mono);color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;min-height:34px}
+.chip[aria-pressed="true"]{color:#1b0b07;background:var(--sun);border-color:var(--sun)}
+section h2{font-family:var(--f-display);font-weight:500;font-size:19px;margin:6px 0 4px}
+section p.note{color:var(--muted);margin:0 0 12px;font-size:14px;max-width:65ch}
+.layers{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.layer{all:unset;box-sizing:border-box;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;grid-template-rows:84px auto auto;gap:6px}
+.layer:hover{border-color:var(--sun)}
+.layer.on{border-color:var(--sun);box-shadow:0 0 0 1px var(--sun) inset}
+.thumb{background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:6px}
+.thumb img{max-height:72px;max-width:100%;object-fit:contain}
+.thumb .domeT{width:84px;height:42px;border-radius:84px 84px 0 0;background:#fff;box-shadow:0 -4px 18px #f2832c88;border:1px solid #f2832c55}
+.thumb.dark{background:#2a1215}
+.lname{font-weight:600;font-size:14px}
+.lmeta{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;gap:6px}
+.lmeta b{color:var(--sun);font-weight:500}
+@media (max-width:520px){.layers{grid-template-columns:repeat(2,minmax(0,1fr))}.time{min-width:80px}}
+</style>
+
+<div class="wrap" dir="rtl">
+  <header>
+    <h1>موشن <span>شمس وهران</span></h1>
+    <p class="sub">الشعار مفكّك إلى ١٢ طبقة ومتحرك بالكود · ٩ ثوانٍ</p>
+  </header>
+
+  <div class="stage" id="stage"><canvas id="cv" width="1920" height="1080" aria-label="تحريك الشعار"></canvas></div>
+
+  <div class="bar">
+    <button class="btn primary" id="play" type="button" aria-label="تشغيل أو إيقاف"><svg viewBox="0 0 24 24" id="ico"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg><span id="playTxt">إيقاف</span></button>
+    <button class="btn" id="replay" type="button"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>إعادة</button>
+    <input class="scrub" id="scrub" type="range" min="0" max="9000" step="1" value="0" aria-label="الخط الزمني">
+    <span class="time" id="time">0.00 / 9.00</span>
+    <div class="chips" role="group" aria-label="المقاس">
+      <button class="chip" type="button" data-f="16:9" aria-pressed="true">16:9</button>
+      <button class="chip" type="button" data-f="1:1" aria-pressed="false">1:1</button>
+      <button class="chip" type="button" data-f="9:16" aria-pressed="false">9:16</button>
+    </div>
+  </div>
+
+  <section>
+    <h2>تفكيك الطبقات</h2>
+    <p class="note">كل جزء من الشعار مقصوص بشفافية كطبقة مستقلة. اضغط على أي طبقة للقفز إلى لحظة دخولها في الحركة.</p>
+    <div class="layers" id="layers"></div>
+  </section>
+</div>
+
+<script>
+const A = __ASSETS__;
+const DUR = 9.0;
+/* ---------- helpers ---------- */
+const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const prog=(t,a,b)=>clamp((t-a)/(b-a));
+const eOutExpo=x=>x>=1?1:1-Math.pow(2,-10*x);
+const eOutCubic=x=>1-Math.pow(1-x,3);
+const eInOutCubic=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eOutBack=(x,s=1.7)=>{const c3=s+1;return 1+c3*Math.pow(x-1,3)+s*Math.pow(x-1,2)};
+const lerp=(a,b,x)=>a+(b-a)*x;
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* ---------- timeline (seconds) ---------- */
+const TL={
+  flare:[0.05,1.2], dome:[0.25,1.35],
+  ray0:1.15, rayStep:0.075, rayDur:0.5, rayOrder:['ray0','ray3','ray1','ray4','ray2','ray5'],
+  tower:[1.55,2.4], win:2.3,
+  lionL:[2.3,3.05], lionR:[2.42,3.17], land:2.92,
+  shine1:[3.25,4.0], flood:[3.85,4.85],
+  text1:[4.55,5.85], text2:[5.3,6.95], shine2:[7.05,7.95]
+};
+const D=A.dome, LY=A.layers, WIN=A.win;
+const BOX={cx:1027,cy:726,w:2012,h:1315};
+const DOMETOP={x:D.cx,y:D.cy-D.r};
+
+/* ---------- images ---------- */
+const IMG={};
+const ready=Promise.all(Object.keys(A.assets).map(k=>new Promise(res=>{const im=new Image();im.onload=()=>{IMG[k]=im;res()};im.src=A.assets[k]})));
+const tmp=document.createElement('canvas');tmp.width=2048;tmp.height=1460;const tx=tmp.getContext('2d');
+
+/* ---------- precomputed particles (deterministic) ---------- */
+const R=rng(7);
+const EMBERS=[...Array(80)].map(()=>({x:R(),ph:R(),sp:0.05+R()*0.09,s:0.8+R()*2.8,w:R()*6.28,wa:0.01+R()*0.03,tw:2+R()*5,hue:R()}));
+function mkSparks(n,seed){const r=rng(seed);return[...Array(n)].map(()=>{const a=-Math.PI*(0.08+r()*0.84);const v=500+r()*1100;return{vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:0.5+r()*0.7,s:2+r()*3}})}
+const SPARK_L=mkSparks(30,11), SPARK_R=mkSparks(30,23);
+const PEN=[...Array(70)].map((_,i)=>{const r=rng(100+i);return{b:r(),y:r(),vx:(r()-.5)*60,vy:-40-r()*90,s:2+r()*3.5,life:.45+r()*.5}});
+
+/* ---------- drawing primitives (logo space) ---------- */
+function layerC(n){const l=LY[n];return{x:l.x+l.w/2,y:l.y+l.h/2}}
+function shineMasked(ctx,n,s,alpha,width=170,ox=0,oy=0){
+  // a diagonal light band at axis position s (logo coords), masked by the layer's alpha
+  const l=LY[n],im=IMG[n];if(!im||alpha<=0)return;
+  tx.setTransform(1,0,0,1,0,0);tx.globalCompositeOperation='source-over';tx.clearRect(0,0,l.w+2,l.h+2);
+  tx.drawImage(im,0,0);
+  tx.globalCompositeOperation='source-in';
+  const dx=Math.cos(-0.45),dy=Math.sin(-0.45)*-1; // axis pointing right-down
+  const px=s*dx-l.x, py=s*dy-l.y;
+  const g=tx.createLinearGradient(px-dx*width,py-dy*width,px+dx*width,py+dy*width);
+  g.addColorStop(0,'rgba(255,240,215,0)');g.addColorStop(.5,`rgba(255,246,225,${alpha})`);g.addColorStop(1,'rgba(255,240,215,0)');
+  tx.fillStyle=g;tx.fillRect(0,0,l.w,l.h);
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.drawImage(tmp,0,0,l.w,l.h,l.x+ox,l.y+oy,l.w,l.h);ctx.restore();
+}
+function axisPos(x,y){const dx=Math.cos(-0.45),dy=-Math.sin(-0.45);return x*dx+y*dy}
+const AX0=axisPos(0,0)-300, AX1=axisPos(2048,1460)+300;
+
+/* ---------- the frame ---------- */
+function render(ctx,W,H,t){
+  const u=Math.min(W,H)/1080;
+  const flood=eInOutCubic(prog(t,...TL.flood));
+  const dark=1-clamp(flood*1.6);
+  // fit + camera push-in
+  const k=Math.min(W*0.88/BOX.w,H*0.8/BOX.h);
+  const cam=lerp(1.13,1.0,eOutCubic(prog(t,0,7.6)));
+  // shake after lions land
+  let sx=0,sy=0;
+  if(t>TL.land){const a=22*u*Math.exp(-(t-TL.land)*6.5);sx=a*(Math.sin(t*91)*.6+Math.sin(t*53)*.4);sy=a*(Math.cos(t*77)*.6+Math.sin(t*131)*.4)}
+  const toScreen=(x,y)=>[W/2+sx+(x-BOX.cx)*k*cam,H/2+sy+(y-BOX.cy)*k*cam];
+  const [dtx,dty]=toScreen(DOMETOP.x,DOMETOP.y);
+
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.shadowBlur=0;
+  // 1 background
+  const bg=ctx.createRadialGradient(dtx,dty,0,dtx,dty,Math.max(W,H)*0.95);
+  bg.addColorStop(0,'#4a1a12');bg.addColorStop(.35,'#220c0c');bg.addColorStop(1,'#060304');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // logo space
+  const LS=()=>ctx.setTransform(k*cam,0,0,k*cam,W/2+sx-BOX.cx*k*cam,H/2+sy-BOX.cy*k*cam);
+  LS();
+
+  // 2 flood of daylight (white sun expanding to fill the frame)
+  if(flood>0){
+    const far=Math.hypot(W,H)/(k*cam)*1.15;
+    const rr=lerp(D.r,far,flood);
+    ctx.save();ctx.shadowColor='rgba(255,140,50,0.9)';ctx.shadowBlur=160*k*cam*dark;
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(D.cx,D.cy,rr,0,7);ctx.fill();ctx.restore();
+    if(flood<1){ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle=`rgba(255,150,70,${0.55*dark})`;ctx.lineWidth=40;ctx.filter='blur(14px)';ctx.beginPath();ctx.arc(D.cx,D.cy,rr,0,7);ctx.stroke();ctx.restore()}
+  }
+
+  const domeE=eOutExpo(prog(t,...TL.dome));
+  const domeDy=(1-domeE)*D.r*1.35;
+
+  // 3 god rays from the top of the dome
+  const gr=prog(t,0.6,1.6)*dark;
+  if(gr>0){
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    const cx=DOMETOP.x,cy=DOMETOP.y+domeDy;
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,2300);
+    g.addColorStop(0,`rgba(255,150,70,${0.16*gr})`);g.addColorStop(.5,`rgba(255,110,50,${0.05*gr})`);g.addColorStop(1,'rgba(255,90,40,0)');
+    ctx.fillStyle=g;
+    for(let i=0;i<18;i++){
+      const a=-Math.PI+(i+0.5)*(Math.PI/18)+Math.sin(t*0.4+i)*0.03+t*0.02;
+      const w=0.025+0.02*((i*7)%3);
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a-w)*2300,cy+Math.sin(a-w)*2300);ctx.lineTo(cx+Math.cos(a+w)*2300,cy+Math.sin(a+w)*2300);ctx.closePath();ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // 4 embers (screen space)
+  ctx.setTransform(1,0,0,1,0,0);
+  const ea=prog(t,0,0.9);
+  if(ea>0){
+    ctx.save();
+    for(const e of EMBERS){
+      const yy=((e.ph+t*e.sp)%1.15);const y=H*(1.08-yy);
+      const x=W*e.x+Math.sin(t*1.3+e.w)*e.wa*W;
+      const tw=0.55+0.45*Math.sin(t*e.tw+e.w);
+      const fade=clamp(yy*4)*clamp((1.15-yy)*3);
+      const a=ea*tw*fade;
+      if(dark>0.02){ctx.globalCompositeOperation='lighter';ctx.fillStyle=`rgba(255,${120+e.hue*90|0},${40+e.hue*40|0},${a*0.85*dark})`;ctx.beginPath();ctx.arc(x,y,e.s*u*1.4,0,7);ctx.fill()}
+      if(flood>0.02){ctx.globalCompositeOperation='source-over';ctx.fillStyle=`rgba(236,${110+e.hue*60|0},45,${a*0.35*flood*(1-prog(t,7.5,9))})`;ctx.beginPath();ctx.arc(x,y,e.s*u,0,7);ctx.fill()}
+    }
+    ctx.restore();
+  }
+  LS();
+
+  // 5 window light behind the tower
+  const tE=prog(t,...TL.tower);
+  const towerDy=(1-eOutBack(tE,1.4))*720;
+  const wt=t-TL.win;
+  let wl=0;if(wt>0){wl=wt>0.35?1:[0,1,0.2,1,0.4,1,1][Math.floor(wt/0.05)]||1}
+  ctx.save();ctx.fillStyle=`rgba(255,${lerp(196,255,flood)|0},${lerp(120,255,flood)|0},${Math.max(wl,flood)})`;
+  ctx.fillRect(WIN.x-2,WIN.y+towerDy-2,WIN.w+4,WIN.h+4);ctx.restore();
+
+  // 6 tower
+  if(tE>0&&IMG.tower){
+    const l=LY.tower;
+    ctx.save();ctx.globalAlpha=clamp(tE*3);
+    if(dark>0){ctx.shadowColor=`rgba(255,110,40,${0.85*dark})`;ctx.shadowBlur=60*k*cam}
+    ctx.drawImage(IMG.tower,l.x,l.y+towerDy);ctx.restore();
+    // trail
+    if(tE<1){ctx.save();ctx.globalCompositeOperation='lighter';for(let i=1;i<4;i++){const e2=eOutBack(prog(t-i*0.025,...TL.tower),1.4);ctx.globalAlpha=0.12/i*dark;ctx.drawImage(IMG.tower,l.x,l.y+(1-e2)*720)}ctx.restore()}
+  }
+  if(wl>0&&dark>0){ctx.save();ctx.globalCompositeOperation='lighter';const c={x:WIN.x+WIN.w/2,y:WIN.y+WIN.h/2+towerDy};const g=ctx.createRadialGradient(c.x,c.y,0,c.x,c.y,150);g.addColorStop(0,`rgba(255,230,180,${0.55*wl*dark})`);g.addColorStop(1,'rgba(255,160,80,0)');ctx.fillStyle=g;ctx.fillRect(c.x-150,c.y-150,300,300);ctx.restore()}
+
+  // 7 lions — rise out from behind the sun along the dome's normal
+  for(const side of ['lionL','lionR']){
+    const [a,b]=TL[side];const p=prog(t,a,b);if(p<=0||!IMG[side])continue;
+    const l=LY[side],c=layerC(side);
+    const nx=c.x-D.cx,ny=c.y-D.cy,nl=Math.hypot(nx,ny);
+    const pose=q=>{const e=eOutBack(q,2.0);return{d:(1-e)*-420,rot:(1-e)*(side==='lionL'?-0.22:0.22),sc:lerp(0.78,1,e)}};
+    const draw=(q,alpha,blend)=>{const o=pose(q);ctx.save();if(blend)ctx.globalCompositeOperation=blend;ctx.globalAlpha=alpha;
+      ctx.translate(c.x+nx/nl*o.d,c.y+ny/nl*o.d);ctx.rotate(o.rot);ctx.scale(o.sc,o.sc);
+      if(dark>0&&!blend){ctx.shadowColor=`rgba(255,100,35,${0.9*dark})`;ctx.shadowBlur=(50+120*Math.exp(-Math.max(0,t-TL.land)*3))*k*cam*dark}
+      ctx.drawImage(IMG[side],-l.w/2,-l.h/2);ctx.restore()};
+    if(p<1)for(let i=4;i>=1;i--)draw(prog(t-i*0.022,a,b),0.16/i*Math.max(dark,.3),'lighter');
+    draw(p,clamp(p*4),null);
+  }
+
+  // 8 rays — shot outward from the rim of the sun
+  TL.rayOrder.forEach((n,i)=>{
+    const st=TL.ray0+i*TL.rayStep;const p=eOutExpo(prog(t,st,st+TL.rayDur));if(p<=0||!IMG[n])return;
+    const ray=A.rays.find(r=>r.name===n),l=LY[n];
+    const len=Math.abs(ray.ox-ray.ix);
+    ctx.save();ctx.beginPath();
+    if(ray.left){const x0=ray.ix-p*len-6;ctx.rect(x0,l.y-10,l.x+l.w-x0+10,l.h+20)}
+    else{ctx.rect(l.x-10,l.y-10,(ray.ix+p*len+6)-(l.x-10),l.h+20)}
+    ctx.clip();
+    if(dark>0){ctx.shadowColor=`rgba(255,120,40,${0.8*dark})`;ctx.shadowBlur=30*k*cam}
+    ctx.drawImage(IMG[n],l.x,l.y);ctx.restore();
+    // streak head
+    const q=prog(t,st,st+TL.rayDur);
+    if(q<1&&dark>0){const hx=lerp(ray.ix,ray.ox,p),hy=lerp(ray.iy,ray.oy,p);ctx.save();ctx.globalCompositeOperation='lighter';
+      const g=ctx.createRadialGradient(hx,hy,0,hx,hy,90);g.addColorStop(0,`rgba(255,240,200,${(1-q)*dark})`);g.addColorStop(1,'rgba(255,150,60,0)');ctx.fillStyle=g;ctx.fillRect(hx-90,hy-90,180,180);ctx.restore()}
+  });
+
+  // shine across graphics
+  const s1=prog(t,...TL.shine1);
+  if(s1>0&&s1<1){const s=lerp(AX0,AX1,eInOutCubic(s1));for(const n of['tower','lionL','lionR'])shineMasked(ctx,n,s,0.75,150,0,n==='tower'?towerDy:0)}
+
+  // 9 the sun dome
+  if(domeE>0&&flood<1){
+    ctx.save();
+    const cy=D.cy+domeDy;
+    ctx.shadowColor=`rgba(255,130,45,${0.95*dark*dark})`;ctx.shadowBlur=(110+40*Math.sin(t*2.2))*k*cam;
+    const g=ctx.createLinearGradient(0,D.cy-D.r,0,D.cy+D.r);
+    g.addColorStop(0,'#fff');g.addColorStop(.6,'#fff');g.addColorStop(.85,'rgba(255,255,255,0.85)');g.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(D.cx,cy,D.r,0,7);ctx.fill();ctx.restore();
+  }
+
+  // 10 horizon flare while the sun rises
+  const fl=prog(t,...TL.flare);
+  if(fl>0&&fl<1&&dark>0){
+    const a=Math.sin(fl*Math.PI);
+    const y=DOMETOP.y+domeDy;
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    ctx.translate(DOMETOP.x,y);ctx.scale(1,0.06);
+    const g=ctx.createRadialGradient(0,0,0,0,0,1400);g.addColorStop(0,`rgba(255,235,200,${a})`);g.addColorStop(.25,`rgba(255,150,70,${a*.5})`);g.addColorStop(1,'rgba(255,120,40,0)');
+    ctx.fillStyle=g;ctx.fillRect(-1400,-1400,2800,2800);ctx.restore();
+    ctx.save();ctx.globalCompositeOperation='lighter';const g2=ctx.createRadialGradient(DOMETOP.x,y,0,DOMETOP.x,y,160);g2.addColorStop(0,`rgba(255,255,240,${a})`);g2.addColorStop(1,'rgba(255,180,90,0)');ctx.fillStyle=g2;ctx.fillRect(DOMETOP.x-160,y-160,320,320);ctx.restore();
+  }
+
+  // 11 landing: shockwave + sparks
+  const lt=t-TL.land;
+  if(lt>0&&lt<1.2&&dark>0){
+    ctx.save();ctx.globalCompositeOperation='lighter';
+    const q=lt/0.8;if(q<1){ctx.strokeStyle=`rgba(255,180,100,${(1-q)*0.8*dark})`;ctx.lineWidth=lerp(26,1,q);ctx.beginPath();ctx.arc(DOMETOP.x,DOMETOP.y+40,lerp(80,1250,eOutCubic(q)),0,7);ctx.stroke()}
+    for(const [arr,n] of [[SPARK_L,'lionL'],[SPARK_R,'lionR']]){
+      const c=layerC(n);const t0=n==='lionL'?0:0.08;const tt=lt-t0;if(tt<0)continue;
+      for(const s of arr){if(tt>s.life)continue;const x=c.x+s.vx*tt*(n==='lionL'?-1:1),y=c.y+s.vy*tt+700*tt*tt;
+        const a=(1-tt/s.life);ctx.strokeStyle=`rgba(255,${170+a*70|0},90,${a*dark})`;ctx.lineWidth=s.s;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-s.vx*0.03*(n==='lionL'?-1:1),y-(s.vy+1400*tt)*0.03);ctx.stroke()}
+    }
+    ctx.restore();
+  }
+
+  // 12 lettering — written right to left with a glowing pen tip
+  for(const [n,[a,b],ty] of [['text1',TL.text1,26],['text2',TL.text2,30]]){
+    const p=prog(t,a,b);if(p<=0||!IMG[n])continue;const l=LY[n];
+    const e=eInOutCubic(p);const feather=120;
+    const edge=l.x+l.w+feather-e*(l.w+feather*2); // moves leftward
+    const dy=(1-eOutCubic(clamp(p*1.6)))*ty;
+    if(p<1){
+      tx.setTransform(1,0,0,1,0,0);tx.globalCompositeOperation='source-over';tx.clearRect(0,0,l.w+2,l.h+2);tx.drawImage(IMG[n],0,0);
+      tx.globalCompositeOperation='destination-in';const ex=edge-l.x;const g=tx.createLinearGradient(ex-feather,0,ex+feather,0);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,1)');tx.fillStyle=g;tx.fillRect(0,0,l.w,l.h);
+      ctx.drawImage(tmp,0,0,l.w,l.h,l.x,l.y+dy,l.w,l.h);
+      // pen glow
+      const pe=Math.sin(p*Math.PI);const gx=edge,gy=l.y+l.h*0.55+dy;
+      ctx.save();const gg=ctx.createRadialGradient(gx,gy,0,gx,gy,l.h*0.7);gg.addColorStop(0,`rgba(242,131,44,${0.35*pe})`);gg.addColorStop(1,'rgba(242,131,44,0)');ctx.fillStyle=gg;ctx.fillRect(gx-l.h,gy-l.h,l.h*2,l.h*2);ctx.restore();
+    } else ctx.drawImage(IMG[n],l.x,l.y);
+    // ink sparks shed by the pen
+    ctx.save();
+    for(const s of PEN){const bt=a+s.b*(b-a)*0.95;const tt=t-bt;if(tt<0||tt>s.life)continue;
+      const bx=l.x+l.w+feather-eInOutCubic(s.b*0.95)*(l.w+feather*2)+feather*0.2;
+      const x=bx+s.vx*tt,y=l.y+s.y*l.h+s.vy*tt;const q=1-tt/s.life;
+      ctx.fillStyle=s.y>.5?`rgba(139,43,61,${q*0.8})`:`rgba(242,131,44,${q*0.9})`;ctx.beginPath();ctx.arc(x,y,s.s*q+0.5,0,7);ctx.fill()}
+    ctx.restore();
+  }
+
+  // final glint across the whole mark
+  const s2=prog(t,...TL.shine2);
+  if(s2>0&&s2<1){const s=lerp(AX0,AX1,eInOutCubic(s2));for(const n of Object.keys(LY))shineMasked(ctx,n,s,n.startsWith('text')?0.45:0.7,210)}
+
+  // vignette (screen)
+  ctx.setTransform(1,0,0,1,0,0);
+  if(dark>0){const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.35,W/2,H/2,Math.hypot(W,H)*0.62);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,`rgba(0,0,0,${0.65*dark*dark})`);ctx.fillStyle=v;ctx.fillRect(0,0,W,H)}
+  // flash on landing + at flood peak
+  const fl2=Math.max(Math.exp(-Math.max(0,t-TL.land)*9)*(t>TL.land?0.28:0),0);
+  if(fl2>0.01){ctx.fillStyle=`rgba(255,220,170,${fl2*dark})`;ctx.fillRect(0,0,W,H)}
+  // opening fade from black
+  const fi=1-prog(t,0,0.35);if(fi>0){ctx.fillStyle=`rgba(0,0,0,${fi})`;ctx.fillRect(0,0,W,H)}
+}
+
+/* ---------- player ---------- */
+const FORMATS={'16:9':[1920,1080],'1:1':[1080,1080],'9:16':[1080,1920]};
+let fmt='16:9',t=0,playing=true,last=null;
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const stage=document.getElementById('stage'),scrub=document.getElementById('scrub'),timeEl=document.getElementById('time');
+function sizeCanvas(){
+  const [fw,fh]=FORMATS[fmt];
+  const cssW=Math.min(stage.clientWidth||fw, fmt==='16:9'?1e9:stage.clientWidth);
+  const q=Math.min(1,(cssW*(window.devicePixelRatio||1))/fw*(fmt==='9:16'?0.75:1));
+  cv.width=Math.round(fw*Math.max(q,0.35));cv.height=Math.round(fh*Math.max(q,0.35));
+  stage.classList.toggle('v',fmt!=='16:9');
+}
+function draw(){render(ctx,cv.width,cv.height,t);scrub.value=Math.round(t*1000);timeEl.textContent=t.toFixed(2)+' / '+DUR.toFixed(2);markLayers()}
+function loop(ts){
+  if(playing){if(last!=null){t+=(ts-last)/1000;if(t>DUR+0.8)t=0}last=ts}else last=null;
+  draw();requestAnimationFrame(loop);
+}
+const playBtn=document.getElementById('play'),ico=document.getElementById('ico'),playTxt=document.getElementById('playTxt');
+function setPlaying(v){playing=v;ico.innerHTML=v?'<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>':'<path d="M7 4v16l13-8z"/>';playTxt.textContent=v?'إيقاف':'تشغيل'}
+playBtn.onclick=()=>{if(!playing&&t>=DUR)t=0;setPlaying(!playing)};
+document.getElementById('replay').onclick=()=>{t=0;setPlaying(true)};
+scrub.oninput=()=>{t=scrub.value/1000;setPlaying(false)};
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{fmt=b.dataset.f;document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b));sizeCanvas()});
+addEventListener('resize',sizeCanvas);
+
+/* layer breakdown */
+const LAYERS=[
+  ['dome','القبة (الشمس)',TL.dome[0]],
+  ['ray0','الأشعة · ٦ قطع',TL.ray0],
+  ['tower','البرج',TL.tower[0]],
+  ['lionL','الأسد الأيسر',TL.lionL[0]],
+  ['lionR','الأسد الأيمن',TL.lionR[0]],
+  ['flood','موجة الضوء',TL.flood[0]],
+  ['text1','السطر الأول',TL.text1[0]],
+  ['text2','السطر الثاني',TL.text2[0]],
+];
+const box=document.getElementById('layers');
+LAYERS.forEach(([k,name,st])=>{
+  const b=document.createElement('button');b.className='layer';b.type='button';b.dataset.st=st;
+  let th;
+  if(k==='dome')th='<div class="thumb dark"><div class="domeT"></div></div>';
+  else if(k==='flood')th='<div class="thumb" style="background:radial-gradient(circle at 50% 100%,#fff 0 38%,#f2832c 44%,#3a1410 70%)"></div>';
+  else th=`<div class="thumb"><img alt="" src="${A.assets[k]}"></div>`;
+  const en=LAYERS.find(x=>x[2]>st);
+  b.innerHTML=th+`<span class="lname">${name}</span><span class="lmeta"><span>دخول</span><b>${st.toFixed(2)}s</b></span>`;
+  b.onclick=()=>{t=Math.max(0,st-0.15);setPlaying(true)};
+  box.appendChild(b);
+});
+function markLayers(){box.querySelectorAll('.layer').forEach(b=>{const st=+b.dataset.st;b.classList.toggle('on',t>=st&&t<st+0.9)})}
+
+window.__render=(w,h,tt)=>{const c=document.createElement('canvas');c.width=w;c.height=h;render(c.getContext('2d'),w,h,tt);return c};
+window.__ready=ready;
+ready.then(()=>{
+  sizeCanvas();
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){t=DUR;setPlaying(false)}
+  requestAnimationFrame(loop);
+});
+</script>

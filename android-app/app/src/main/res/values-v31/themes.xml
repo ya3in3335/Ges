@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ always shows a system starting window; keep it neutral (black, no icon)
+         so that it blends into the first frame of the client's animation. -->
+    <style name="Theme.Association.Starting" parent="Theme.Association">
+        <item name="android:windowBackground">@color/starting_background</item>
+        <item name="android:windowSplashScreenBackground">@color/starting_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+    </style>
+</resources>

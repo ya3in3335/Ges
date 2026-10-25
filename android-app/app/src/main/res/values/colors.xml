@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#FFFFFF</color>
+    <!-- First frame of the client's animation is black: the system starting window matches it. -->
+    <color name="starting_background">#000000</color>
+    <color name="brand_sun">#F2832C</color>
+</resources>
