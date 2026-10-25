@@ -1,0 +1,45 @@
+name: Web (admin dashboard & download site)
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    paths: ["admin-dashboard/**", "distribution-website/**", ".github/workflows/web.yml"]
+  pull_request:
+    paths: ["admin-dashboard/**", "distribution-website/**", ".github/workflows/web.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  admin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin-dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: admin-dashboard/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL_NO_SLASH || 'https://api.example.invalid' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: admin-dashboard-dist
+          path: admin-dashboard/dist
+          retention-days: 7
+
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check site files and links
+        run: |
+          cd distribution-website
+          for f in index.html privacy.html assets/site.css assets/site.js assets/logo.webp; do test -f "$f" || { echo "missing $f"; exit 1; }; done
+          grep -o 'src="[^"]*"\|href="[^"#]*"' index.html privacy.html | sed -E 's/.*="([^"]*)"/\1/' | grep -v '^https\?:' | sort -u | while read p; do [ -z "$p" ] || [ "$p" = "./" ] || test -e "$p" || { echo "broken link $p"; exit 1; }; done

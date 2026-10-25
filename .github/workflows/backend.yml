@@ -1,0 +1,57 @@
+name: Backend
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend.yml"]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Apply D1 migrations and deploy the Worker to Cloudflare"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Bundle check
+        run: npx wrangler deploy --dry-run --outdir dist
+
+  deploy:
+    # Manual only, never automatic: deployment changes production.
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - name: Migrate and deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler d1 migrations apply association_db --remote
+          npx wrangler deploy
