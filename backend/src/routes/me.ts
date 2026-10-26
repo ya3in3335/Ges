@@ -92,6 +92,8 @@ export async function deleteMe(ctx: Ctx): Promise<Response> {
     db.prepare('DELETE FROM volunteers WHERE user_id = ?').bind(me.id),
     db.prepare('DELETE FROM push_devices WHERE user_id = ?').bind(me.id),
     db.prepare('DELETE FROM activity_registrations WHERE user_id = ?').bind(me.id),
+    db.prepare('DELETE FROM lecture_registrations WHERE user_id = ?').bind(me.id),
+    db.prepare('DELETE FROM member_profiles WHERE user_id = ?').bind(me.id),
     db.prepare('DELETE FROM auth_codes WHERE user_id = ?').bind(me.id),
     db.prepare(`UPDATE verification_audit SET telegram_user_id = NULL WHERE user_id = ?`).bind(me.id),
   ]);

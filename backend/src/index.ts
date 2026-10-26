@@ -16,6 +16,7 @@ import * as notifications from './routes/notifications';
 import * as admin from './routes/admin';
 import * as devices from './routes/devices';
 import * as deviceRequests from './routes/deviceRequests';
+import * as lectures from './routes/lectures';
 import { home } from './routes/home';
 import { flushChannelOutbox } from './services/channel';
 
@@ -33,6 +34,8 @@ export const router = new Router()
   .get('/media/:key', media.serveMedia)
   .get('/api/polls', polls.listPolls)
   .get('/api/polls/:id', polls.getPoll)
+  .get('/api/lectures', lectures.listLectures)
+  .get('/api/lectures/:id', lectures.getLecture)
   // auth
   .post('/api/auth/register', auth.register)
   .post('/api/auth/login', auth.login)
@@ -62,6 +65,9 @@ export const router = new Router()
   .post('/api/polls/:id/vote', polls.castVote)
   .post('/api/activities/:id/register', activities.registerForActivity)
   .post('/api/activities/:id/cancel', activities.cancelActivityRegistration)
+  .get('/api/me/lecture-profile', lectures.myLectureProfile)
+  .post('/api/lectures/:id/register', lectures.registerForLecture)
+  .post('/api/lectures/:id/cancel', lectures.cancelLectureRegistration)
   .post('/api/volunteers', volunteers.applyVolunteer)
   .get('/api/volunteers/me', volunteers.myVolunteer)
   .delete('/api/volunteers/me', volunteers.withdrawVolunteer)
@@ -84,6 +90,12 @@ export const router = new Router()
   .patch('/api/admin/activities/:id', activities.adminUpdateActivity)
   .get('/api/admin/activities/:id/participants', activities.adminActivityParticipants)
   .patch('/api/admin/activities/:id/participants/:userId', activities.adminSetParticipantStatus)
+  .get('/api/admin/lectures', lectures.adminListLectures)
+  .post('/api/admin/lectures', lectures.adminCreateLecture)
+  .patch('/api/admin/lectures/:id', lectures.adminUpdateLecture)
+  .delete('/api/admin/lectures/:id', lectures.adminDeleteLecture)
+  .get('/api/admin/lectures/:id/registrations', lectures.adminLectureRegistrations)
+  .patch('/api/admin/lectures/:id/registrations/:userId', lectures.adminSetLectureRegistration)
   .get('/api/admin/polls', polls.adminListPolls)
   .post('/api/admin/polls', polls.adminCreatePoll)
   .patch('/api/admin/polls/:id', polls.adminUpdatePoll)
