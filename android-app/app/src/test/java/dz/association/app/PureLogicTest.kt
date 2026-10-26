@@ -5,9 +5,6 @@ import dz.association.app.ui.account.AuthValidation
 import dz.association.app.ui.account.VerifyUi
 import dz.association.app.ui.account.mapVerificationStatus
 import dz.association.app.ui.gallery.isDirectVideo
-import dz.association.app.ui.intro.INTRO_DONE_URL
-import dz.association.app.ui.intro.INTRO_URL
-import dz.association.app.ui.intro.IntroUrlPolicy
 import dz.association.app.ui.navigation.Routes
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,14 +30,6 @@ class PureLogicTest {
         assertNull(Routes.fromDeepLink(null))
         // invalid ids fall back to the list instead of being injected into a route
         assertEquals(Routes.NEWS, Routes.fromDeepLink("app://news/..%2F..%2Fsettings"))
-    }
-
-    @Test fun introWebViewOnlyLoadsBundledAssets() {
-        assertTrue(IntroUrlPolicy.isAllowedAsset(INTRO_URL))
-        assertTrue(IntroUrlPolicy.isDone(INTRO_DONE_URL))
-        assertFalse(IntroUrlPolicy.isAllowedAsset("https://fonts.googleapis.com/css2"))
-        assertFalse(IntroUrlPolicy.isAllowedAsset("https://appassets.androidplatform.net/res/raw/secret"))
-        assertFalse(IntroUrlPolicy.isAllowedAsset("file:///android_asset/intro/intro.html"))
     }
 
     @Test fun phoneNormalisationMatchesBackendRules() {

@@ -76,14 +76,11 @@ class ResourcesTest {
         compose.onNodeWithText("الرئيسية").assertIsDisplayed()
     }
 
-    @Test fun introAssetIsTheClientAnimationAndIsSelfContained() {
-        val html = File("src/main/assets/intro/intro.html").readText()
-        assertTrue(html.contains("function render(ctx,W,H,t)"))
-        assertTrue(html.contains("const TL={"))
-        assertTrue(html.contains("Content-Security-Policy"))
-        // No remote resources: only data: images and the completion sentinel.
-        val urls = Regex("https?://[^\"'\\s)]+").findAll(html).map { it.value }.toSet()
-        assertTrue("unexpected URLs: $urls", urls.all { it.startsWith("https://appassets.androidplatform.net/__intro_done") })
+    @Test fun introVideoIsBundled() {
+        // Rendered from the client's animation by tools/render_intro_video.js.
+        val f = File("src/main/res/raw/intro.mp4")
+        assertTrue(f.exists() && f.length() in 200_000..6_000_000)
+        assertEquals("ftyp", String(f.readBytes().copyOfRange(4, 8)))
     }
 }
 

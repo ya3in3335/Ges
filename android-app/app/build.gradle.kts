@@ -118,7 +118,6 @@ dependencies {
     implementation(libs.work.runtime)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
-    implementation(libs.webkit)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.kotlinx.coroutines.play.services)

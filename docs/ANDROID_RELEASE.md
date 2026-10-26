@@ -35,5 +35,5 @@ git tag v1.0.0 && git push origin v1.0.0
 Only distribute the signed release APK from the GitHub Release / official website.
 
 ## Re-generating client assets
-- Intro: `python3 tools/build_intro_html.py` (after any change to `branding/client-animation-src/oran-motion.html`).
+- Intro video: `NODE_PATH=$(npm root -g) node tools/render_intro_video.js` (after any change to `branding/client-animation-src/oran-motion.html`).
 - Logo/icons: `python3 tools/build_logo_assets.py`.
