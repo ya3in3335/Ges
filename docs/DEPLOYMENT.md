@@ -75,3 +75,17 @@ Then build the apps with `-PAPI_FALLBACK_URLS=https://association-gateway.pages.
 (or the repository variable `API_FALLBACK_URLS` in CI). The app tries the address that last worked
 first; only requests that provably never reached the server (or GET requests) are moved to the other
 address, so a vote or registration is never sent twice.
+
+## End-to-end check of the whole API
+
+`backend/scripts/e2e.mjs` exercises every feature (supervisor activation through the bot, activation codes,
+registration/login/refresh, Telegram phone verification, voting rules, news, activities, volunteers, media,
+donations, notifications, RBAC, password and account deletion). It creates test data, so it refuses to run
+against a deployed URL; run it against a local Worker:
+
+```bash
+cd backend
+yes | npx wrangler d1 migrations apply association_db --local
+npx wrangler dev --local --var JWT_SECRET:<32+ chars> --var TELEGRAM_WEBHOOK_SECRET:<secret> --var TELEGRAM_APPROVER_IDS:777000 &
+BASE=http://127.0.0.1:8787 WEBHOOK_SECRET=<secret> APPROVER=777000 node scripts/e2e.mjs
+```
