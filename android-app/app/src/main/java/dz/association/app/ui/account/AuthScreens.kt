@@ -77,6 +77,7 @@ class AuthViewModel @Inject constructor(private val repo: AuthRepository, privat
     val busy = MutableStateFlow(false)
     val error = MutableStateFlow<AppError?>(null)
     val info = MutableStateFlow<Int?>(null)
+    val emailVerified: Boolean get() = repo.user.value?.emailVerified == true
 
     private fun run(block: suspend () -> Result<*>, onOk: () -> Unit) = viewModelScope.launch {
         busy.value = true; error.value = null
@@ -96,7 +97,7 @@ internal val ltr: androidx.compose.ui.text.TextStyle
     @Composable get() = androidx.compose.material3.LocalTextStyle.current.copy(textDirection = TextDirection.Ltr)
 
 @Composable
-fun LoginScreen(back: () -> Unit, nav: (String) -> Unit, onDone: () -> Unit, vm: AuthViewModel = hiltViewModel()) {
+fun LoginScreen(back: () -> Unit, nav: (String) -> Unit, onDone: (emailVerified: Boolean) -> Unit, vm: AuthViewModel = hiltViewModel()) {
     var id by rememberSaveable { mutableStateOf("") }
     var pw by rememberSaveable { mutableStateOf("") }
     val busy by vm.busy.collectAsStateWithLifecycle()
@@ -111,7 +112,7 @@ fun LoginScreen(back: () -> Unit, nav: (String) -> Unit, onDone: () -> Unit, vm:
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth().testTag("login_identifier"))
             PasswordField(pw, { pw = it }, stringResource(R.string.password), Modifier.testTag("login_password"))
             error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error); dz.association.app.ui.components.NetworkDetail(it) }
-            PrimaryButton(stringResource(R.string.login), { vm.login(id, pw, onDone) }, enabled = id.isNotBlank() && pw.isNotBlank(), loading = busy)
+            PrimaryButton(stringResource(R.string.login), { vm.login(id, pw) { onDone(vm.emailVerified) } }, enabled = id.isNotBlank() && pw.isNotBlank(), loading = busy)
             TextButton(onClick = { nav(Routes.FORGOT) }) { Text(stringResource(R.string.forgot_password)) }
             TextButton(onClick = { nav(Routes.REGISTER) }) { Text(stringResource(R.string.no_account)) }
         }

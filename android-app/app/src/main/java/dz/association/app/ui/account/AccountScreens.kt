@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MarkEmailUnread
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Settings
@@ -171,6 +172,15 @@ fun AccountScreen(nav: (String) -> Unit, vm: AccountViewModel = hiltViewModel())
                             Pill(roleLabel(u.role))
                             if (u.phoneVerified) Pill(stringResource(R.string.phone_verified), MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
                         }
+                    }
+                }
+                if (!u.emailVerified) {
+                    AppCard(Modifier.fillMaxWidth(), onClick = { nav(Routes.verifyEmail()) }) {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.email_not_verified)) },
+                            supportingContent = { Text(stringResource(R.string.verify_email_action)) },
+                            leadingContent = { Icon(Icons.Outlined.MarkEmailUnread, null, tint = MaterialTheme.colorScheme.primary) },
+                        )
                     }
                 }
                 if (!u.phoneVerified) {

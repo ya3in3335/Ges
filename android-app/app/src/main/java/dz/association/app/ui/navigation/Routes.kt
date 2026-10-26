@@ -23,6 +23,8 @@ object Routes {
     const val REGISTER = "register"
     const val FORGOT = "forgot"
     const val VERIFY = "verify"
+    const val VERIFY_EMAIL = "verify_email?next={next}"
+    fun verifyEmail(next: String? = null) = "verify_email?next=${Uri.encode(next ?: "")}"
     const val SETTINGS = "settings"
     const val MY_ACTIVITIES = "my_activities"
 

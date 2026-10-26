@@ -99,6 +99,7 @@ fun errorMessage(e: AppError): String = when (e) {
         "password_mismatch" -> stringResource(R.string.err_password_mismatch)
         "password_too_short", "password_too_weak", "password_too_common", "password_too_long" -> stringResource(R.string.err_password_weak)
         "invalid_code" -> stringResource(R.string.err_invalid_code)
+        "email_delivery_failed" -> stringResource(R.string.err_email_delivery)
         "already_voted" -> stringResource(R.string.err_already_voted)
         "poll_not_active" -> stringResource(R.string.err_poll_not_active)
         "activity_full" -> stringResource(R.string.err_activity_full)

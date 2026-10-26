@@ -43,6 +43,7 @@ import dz.association.app.ui.account.ForgotPasswordScreen
 import dz.association.app.ui.account.LoginScreen
 import dz.association.app.ui.account.RegisterScreen
 import dz.association.app.ui.account.SettingsScreen
+import dz.association.app.ui.account.VerifyEmailScreen
 import dz.association.app.ui.account.VerifyPhoneScreen
 import dz.association.app.ui.activities.ActivitiesScreen
 import dz.association.app.ui.activities.ActivityDetailScreen
@@ -144,10 +145,23 @@ fun AppNavHost(
             composable(Routes.DONATIONS) { DonationsScreen(back, nav) }
             composable(Routes.ABOUT) { AboutScreen(back) }
             composable(Routes.NOTIFICATIONS) { NotificationsScreen(back, nav) }
-            composable(Routes.LOGIN) { LoginScreen(back, nav, onDone = { navController.popBackStack() }) }
+            composable(Routes.LOGIN) {
+                LoginScreen(back, nav, onDone = { verified ->
+                    if (verified) navController.popBackStack()
+                    else navController.navigate(Routes.verifyEmail()) { popUpTo(Routes.LOGIN) { inclusive = true } }
+                })
+            }
             composable(Routes.REGISTER) {
+                // Registration: e-mail code first, then phone verification through Telegram.
                 RegisterScreen(back, onRegistered = {
-                    navController.navigate(Routes.VERIFY) { popUpTo(Routes.REGISTER) { inclusive = true } }
+                    navController.navigate(Routes.verifyEmail(next = Routes.VERIFY)) { popUpTo(Routes.REGISTER) { inclusive = true } }
+                })
+            }
+            composable(Routes.VERIFY_EMAIL, listOf(navArgument("next") { type = NavType.StringType; defaultValue = "" })) { entry ->
+                val next = entry.arguments?.getString("next").orEmpty()
+                VerifyEmailScreen(back, onDone = {
+                    if (next.isNotEmpty()) navController.navigate(next) { popUpTo(Routes.VERIFY_EMAIL) { inclusive = true } }
+                    else navController.popBackStack()
                 })
             }
             composable(Routes.FORGOT) { ForgotPasswordScreen(back) }

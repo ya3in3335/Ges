@@ -9,6 +9,8 @@ export interface Env {
   REFRESH_TOKEN_TTL_DAYS: string;
   VERIFICATION_TTL_SECONDS: string;
   EMAIL_FROM?: string;
+  /** Display name for the sender (optional). */
+  EMAIL_FROM_NAME?: string;
 
   JWT_SECRET: string;
   TELEGRAM_BOT_TOKEN?: string;
@@ -18,6 +20,7 @@ export interface Env {
   TELEGRAM_APPROVER_IDS?: string;
   FCM_SERVICE_ACCOUNT_JSON?: string;
   RESEND_API_KEY?: string;
+  BREVO_API_KEY?: string;
 }
 
 export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'EDITOR' | 'VOLUNTEER' | 'USER';

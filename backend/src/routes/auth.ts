@@ -8,7 +8,7 @@ import { issueTokens } from '../lib/session';
 import { randomDigits, sha256Hex, uuid } from '../lib/crypto';
 import { requireUser } from '../lib/rbac';
 import { sendMessage } from '../services/telegramApi';
-import { emailConfigured, sendEmail } from '../services/email';
+import { codeEmail, emailConfigured, sendEmail } from '../services/email';
 
 const MAX_FAILED_LOGINS = 10;
 const LOCK_MS = 15 * 60_000;
@@ -198,7 +198,8 @@ export async function forgotPassword(ctx: Ctx): Promise<Response> {
       if (r.ok) channels.push('telegram');
     }
     if (emailConfigured(ctx.env) && user.email_verified_at) {
-      if (await sendEmail(ctx.env, ctx.fetch, user.email, 'Password reset / إعادة تعيين كلمة المرور', msg)) channels.push('email');
+      const m = codeEmail('reset', code, 15);
+      if (await sendEmail(ctx.env, ctx.fetch, user.email, m.subject, m.text, m.html)) channels.push('email');
     }
   }
   // Identical response whether or not the account exists (no account enumeration).
@@ -250,10 +251,15 @@ export async function sendEmailVerification(ctx: Ctx): Promise<Response> {
   const user = await ctx.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(me.id).first<UserRow>();
   if (!user || user.email_verified_at) return json({ ok: true, alreadyVerified: true });
   const code = randomDigits(6);
-  await ctx.env.DB.prepare(
-    `INSERT INTO auth_codes (id, user_id, purpose, code_hash, created_at, expires_at) VALUES (?, ?, 'email_verify', ?, ?, ?)`,
-  ).bind(uuid(), me.id, await sha256Hex(`${me.id}:${code}`), ctx.now, ctx.now + 30 * 60_000).run();
-  const sent = await sendEmail(ctx.env, ctx.fetch, user.email, 'Email verification / تأكيد البريد الإلكتروني', `${code}`);
+  // Only the latest code is valid.
+  await ctx.env.DB.batch([
+    ctx.env.DB.prepare(`UPDATE auth_codes SET used_at = ? WHERE user_id = ? AND purpose = 'email_verify' AND used_at IS NULL`).bind(ctx.now, me.id),
+    ctx.env.DB.prepare(
+      `INSERT INTO auth_codes (id, user_id, purpose, code_hash, created_at, expires_at) VALUES (?, ?, 'email_verify', ?, ?, ?)`,
+    ).bind(uuid(), me.id, await sha256Hex(`${me.id}:${code}`), ctx.now, ctx.now + 30 * 60_000),
+  ]);
+  const m = codeEmail('verify', code, 30);
+  const sent = await sendEmail(ctx.env, ctx.fetch, user.email, m.subject, m.text, m.html);
   if (!sent) throw new HttpError(502, 'email_delivery_failed');
   return json({ ok: true });
 }

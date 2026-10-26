@@ -20,7 +20,7 @@ import okio.ByteString.Companion.decodeBase64
 class AuthInterceptor(private val session: SessionManager, private val refresher: TokenRefresher? = null) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val req = chain.request()
-        if (req.header("Authorization") != null || req.url.encodedPath.contains("/api/auth/")) return chain.proceed(req)
+        if (req.header("Authorization") != null || req.url.encodedPath.endsWith("/api/auth/refresh")) return chain.proceed(req)
         var token = session.accessToken
         if (refresher != null && session.refreshToken != null && (token == null || isExpired(token))) {
             token = refresher.refresh(failedToken = token) ?: session.accessToken

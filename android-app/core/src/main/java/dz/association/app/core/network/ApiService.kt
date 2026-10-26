@@ -33,6 +33,8 @@ interface ApiService {
     @POST("api/auth/logout") suspend fun logout(@Body body: RefreshRequest): OkResponse
     @POST("api/auth/password/forgot") suspend fun forgotPassword(@Body body: ForgotRequest): OkResponse
     @POST("api/auth/password/reset") suspend fun resetPassword(@Body body: ResetRequest): OkResponse
+    @POST("api/auth/email/send") suspend fun sendEmailCode(@Body body: EmptyRequest = EmptyRequest()): EmailSendResponse
+    @POST("api/auth/email/verify") suspend fun verifyEmail(@Body body: EmailCodeRequest): OkResponse
 
     // account
     @GET("api/me") suspend fun me(): UserResponse

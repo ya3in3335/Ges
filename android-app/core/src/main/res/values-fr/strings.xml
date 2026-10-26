@@ -88,6 +88,14 @@
     <string name="poll_members_only">Réservé aux membres approuvés</string>
     <string name="poll_pick_option">Choisissez d’abord une option ci-dessus, puis appuyez sur « Confirmer mon vote »</string>
     <string name="poll_not_eligible">Votre compte n’est pas éligible à ce vote</string>
+    <string name="verify_email_title">Vérification de l’e-mail</string>
+    <string name="verify_email_sending">Envoi du code de vérification…</string>
+    <string name="verify_email_sent">Nous avons envoyé un code à 6 chiffres à :</string>
+    <string name="verify_email_resend">Renvoyer le code</string>
+    <string name="verify_email_resend_in">Renvoyer dans %1$d s</string>
+    <string name="verify_email_spam_hint">Message introuvable ? Vérifiez le dossier « Spam ».</string>
+    <string name="email_not_verified">E-mail non vérifié</string>
+    <string name="verify_email_action">Appuyez pour le vérifier avec un code reçu par e-mail</string>
     <string name="poll_need_login">Connectez-vous pour voter</string>
     <string name="poll_need_verify">Confirmez votre numéro avant de voter</string>
     <string name="poll_not_member">Vous ne figurez pas sur la liste des membres éligibles</string>
@@ -187,6 +195,7 @@
     <string name="err_invalid_phone">Numéro invalide. Saisissez un mobile algérien (05/06/07)</string>
     <string name="err_password_mismatch">Les mots de passe ne correspondent pas</string>
     <string name="err_password_weak">Mot de passe trop faible (8+ caractères, lettres et chiffres)</string>
+    <string name="err_email_delivery">Impossible d’envoyer l’e-mail. Vérifiez l’adresse et réessayez plus tard.</string>
     <string name="err_invalid_code">Code invalide ou expiré</string>
     <string name="err_already_voted">Vous avez déjà voté</string>
     <string name="err_poll_not_active">Le vote n’est pas ouvert</string>

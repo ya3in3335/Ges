@@ -4,6 +4,7 @@ import dz.association.app.core.auth.SessionManager
 import dz.association.app.core.network.ApiService
 import dz.association.app.core.network.ChangePasswordRequest
 import dz.association.app.core.network.DeleteAccountRequest
+import dz.association.app.core.network.EmailCodeRequest
 import dz.association.app.core.network.ForgotRequest
 import dz.association.app.core.network.LoginRequest
 import dz.association.app.core.network.Preferences
@@ -45,6 +46,14 @@ class AuthRepository @Inject constructor(
         session.refreshToken?.let { rt -> apiCall { api.logout(RefreshRequest(rt)) } }
         session.clear()
         cache.clear()
+    }
+
+    /** Sends a 6-digit code to the account's e-mail. Ok(true) when the address is already verified. */
+    suspend fun sendEmailCode(): Result<Boolean> = apiCall { api.sendEmailCode().alreadyVerified }
+
+    suspend fun verifyEmail(code: String): Result<User> = when (val r = apiCall { api.verifyEmail(EmailCodeRequest(code.trim())) }) {
+        is Result.Ok -> refreshMe()
+        is Result.Err -> r
     }
 
     suspend fun forgot(identifier: String) = apiCall { api.forgotPassword(ForgotRequest(identifier.trim())) }

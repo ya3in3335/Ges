@@ -44,6 +44,9 @@ import kotlinx.serialization.Serializable
 @Serializable data class RegisterRequest(val fullName: String, val email: String, val phone: String, val password: String, val confirmPassword: String, val locale: String)
 @Serializable data class LoginRequest(val identifier: String, val password: String, val client: String = "android")
 @Serializable data class RefreshRequest(val refreshToken: String)
+@Serializable class EmptyRequest
+@Serializable data class EmailSendResponse(val ok: Boolean = true, val alreadyVerified: Boolean = false)
+@Serializable data class EmailCodeRequest(val code: String)
 @Serializable data class ForgotRequest(val identifier: String)
 @Serializable data class ResetRequest(val identifier: String, val code: String, val newPassword: String)
 @Serializable data class ChangePasswordRequest(val currentPassword: String, val newPassword: String)

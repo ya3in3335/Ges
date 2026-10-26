@@ -88,6 +88,14 @@
     <string name="poll_members_only">مخصّص للأعضاء المعتمدين</string>
     <string name="poll_pick_option">اختر أحد الخيارات أعلاه أولاً، ثم اضغط «تأكيد التصويت»</string>
     <string name="poll_not_eligible">حسابك غير مؤهل للمشاركة في هذا التصويت</string>
+    <string name="verify_email_title">تأكيد البريد الإلكتروني</string>
+    <string name="verify_email_sending">جارٍ إرسال رمز التأكيد إلى بريدك…</string>
+    <string name="verify_email_sent">أرسلنا رمزاً من 6 أرقام إلى:</string>
+    <string name="verify_email_resend">إعادة إرسال الرمز</string>
+    <string name="verify_email_resend_in">إعادة الإرسال بعد %1$d ثانية</string>
+    <string name="verify_email_spam_hint">لم تجد الرسالة؟ تحقّق من مجلد «الرسائل غير المرغوب فيها» (Spam).</string>
+    <string name="email_not_verified">البريد الإلكتروني غير مؤكد</string>
+    <string name="verify_email_action">اضغط لتأكيده برمز يصلك على بريدك</string>
     <string name="poll_need_login">سجّل الدخول للمشاركة في التصويت</string>
     <string name="poll_need_verify">يجب تأكيد رقم هاتفك قبل التصويت</string>
     <string name="poll_not_member">أنت غير مدرج في قائمة الأعضاء المؤهلين لهذا التصويت</string>
@@ -187,6 +195,7 @@
     <string name="err_invalid_phone">رقم الهاتف غير صالح. أدخل رقماً جزائرياً (05 / 06 / 07)</string>
     <string name="err_password_mismatch">كلمتا المرور غير متطابقتين</string>
     <string name="err_password_weak">كلمة المرور ضعيفة. استخدم 8 أحرف على الأقل مع حروف وأرقام</string>
+    <string name="err_email_delivery">تعذّر إرسال الرسالة إلى بريدك. تأكّد من صحة العنوان وحاول لاحقاً.</string>
     <string name="err_invalid_code">الرمز غير صحيح أو منتهي الصلاحية</string>
     <string name="err_already_voted">لقد صوّتّ مسبقاً في هذا الاستطلاع</string>
     <string name="err_poll_not_active">التصويت غير متاح حالياً</string>
