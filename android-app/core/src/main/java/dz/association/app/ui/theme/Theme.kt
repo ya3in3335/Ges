@@ -113,11 +113,16 @@ val AppShapes = Shapes(
 )
 
 @Composable
-fun AssociationTheme(mode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
+fun AssociationTheme(mode: ThemeMode = ThemeMode.SYSTEM, glass: Boolean = false, content: @Composable () -> Unit) {
     val dark = when (mode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-    MaterialTheme(colorScheme = if (dark) Dark else Light, typography = AppTypography, shapes = AppShapes, content = content)
+    val base = if (dark) Dark else Light
+    // In glass mode screens are transparent so the aurora backdrop shows through.
+    val scheme = if (glass) base.copy(background = Color.Transparent) else base
+    MaterialTheme(colorScheme = scheme, typography = AppTypography, shapes = AppShapes) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalGlass provides glass, content = content)
+    }
 }

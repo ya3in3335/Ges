@@ -1,6 +1,13 @@
 package dz.association.app.ui.home
 
 import android.content.Intent
+import dz.association.app.ui.theme.pressTilt
+import dz.association.app.ui.theme.gloss
+import dz.association.app.ui.theme.glass
+import dz.association.app.ui.theme.float3d
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Campaign
@@ -136,57 +143,66 @@ private fun greeting(): String {
     return stringResource(if (h in 4..13) R.string.greeting_morning else R.string.greeting_evening)
 }
 
-/** Branded header: soft warm gradient, transparent logo, greeting and notifications. */
+/** Hero header: floating 3D logo over the aurora backdrop, with parallax on scroll. */
 @Composable
-private fun HomeHeader(user: User?, settings: Map<String, String>, nav: (String) -> Unit) {
-    val warm = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color(0xFF2A1519) else Color(0xFFFFEEE3)
+private fun HomeHeader(user: User?, settings: Map<String, String>, nav: (String) -> Unit, scrollOffset: () -> Float = { 0f }) {
     Box(
         Modifier.fillMaxWidth()
-            .background(Brush.verticalGradient(listOf(warm, MaterialTheme.colorScheme.background)))
+            .graphicsLayer {
+                val o = scrollOffset()
+                translationY = o * 0.45f
+                alpha = (1f - o / 600f).coerceIn(0f, 1f)
+            }
             .statusBarsPadding()
-            .padding(start = 20.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+            .padding(start = 20.dp, end = 14.dp, top = 8.dp, bottom = 4.dp),
     ) {
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.Top) {
                 LogoImage(
-                    Modifier.height(72.dp).width(110.dp),
+                    Modifier.height(96.dp).width(146.dp).float3d(),
                     contentDescription = settings["association_name_ar"]?.let { loc(it, settings["association_name_fr"]) } ?: stringResource(R.string.app_name),
                 )
                 Spacer(Modifier.weight(1f))
-                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerLowest, shadowElevation = 1.dp) {
-                    IconButton(onClick = { nav(Routes.NOTIFICATIONS) }) { Icon(Icons.Outlined.Notifications, stringResource(R.string.menu_notifications)) }
+                Box(Modifier.size(48.dp).pressTilt().glass(CircleShape, elevation = 10.dp).clip(CircleShape).clickable { nav(Routes.NOTIFICATIONS) }, contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.Notifications, stringResource(R.string.menu_notifications))
                 }
             }
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(10.dp))
             Text(greeting(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 user?.fullName?.substringBefore(' ') ?: (settings["association_name_ar"]?.let { loc(it, settings["association_name_fr"]) } ?: stringResource(R.string.app_name)),
-                style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold,
             )
         }
     }
 }
 
-/** Four main shortcuts as round icon tiles. */
+/** Four main shortcuts as glossy 3D "clay" tiles with coloured depth shadows. */
 @Composable
 private fun QuickLinks(nav: (String) -> Unit) {
     val links = listOf(
-        Triple(R.string.menu_news, Icons.Outlined.Newspaper, Routes.NEWS),
-        Triple(R.string.menu_gallery, Icons.Outlined.Collections, Routes.GALLERY),
-        Triple(R.string.menu_donations, Icons.Outlined.Savings, Routes.DONATIONS),
-        Triple(R.string.menu_about, Icons.Outlined.Info, Routes.ABOUT),
+        listOf(R.string.menu_news, Icons.Outlined.Newspaper, Routes.NEWS, Brand.Maroon, Brand.MaroonDeep),
+        listOf(R.string.menu_gallery, Icons.Outlined.Collections, Routes.GALLERY, Color(0xFFE9762B), Color(0xFFC4501F)),
+        listOf(R.string.menu_donations, Icons.Outlined.Savings, Routes.DONATIONS, Brand.Ember, Color(0xFFB02E1B)),
+        listOf(R.string.menu_about, Icons.Outlined.Info, Routes.ABOUT, Color(0xFF7A4B9A), Color(0xFF4F2D6B)),
     )
-    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-        links.forEach { (label, icon, route) ->
-            Column(
-                Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).clickable { nav(route) }.padding(vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.09f), modifier = Modifier.size(56.dp)) {
-                    Box(contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) }
-                }
-                Spacer(Modifier.height(6.dp))
-                Text(stringResource(label), style = MaterialTheme.typography.labelMedium, maxLines = 1)
+    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+        links.forEach { l ->
+            val label = l[0] as Int; val icon = l[1] as androidx.compose.ui.graphics.vector.ImageVector; val route = l[2] as String
+            val c1 = l[3] as Color; val c2 = l[4] as Color
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                val shape = RoundedCornerShape(22.dp)
+                Box(
+                    Modifier.size(62.dp).pressTilt(14f)
+                        .shadow(14.dp, shape, ambientColor = c1, spotColor = c1)
+                        .clip(shape)
+                        .background(Brush.linearGradient(listOf(c1.copy(alpha = 0.85f), c2)))
+                        .gloss()
+                        .clickable { nav(route) },
+                    contentAlignment = Alignment.Center,
+                ) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(28.dp)) }
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(label), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
             }
         }
     }
@@ -195,8 +211,13 @@ private fun QuickLinks(nav: (String) -> Unit) {
 @Composable
 internal fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: (String) -> Unit) {
     val ctx = LocalContext.current
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 28.dp)) {
-        item { HomeHeader(user, d.settings, nav) }
+    val listState = rememberLazyListState()
+    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 28.dp)) {
+        item {
+            HomeHeader(user, d.settings, nav) {
+                if (listState.firstVisibleItemIndex == 0) listState.firstVisibleItemScrollOffset.toFloat() else 600f
+            }
+        }
         item { OfflineBanner(fromCache) }
         item { QuickLinks(nav) }
 
@@ -270,9 +291,12 @@ internal fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: 
 
 @Composable
 private fun IconBadge(icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f), modifier = Modifier.size(44.dp)) {
-        Box(contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.tertiary) }
-    }
+    val shape = RoundedCornerShape(14.dp)
+    Box(
+        Modifier.size(46.dp).shadow(8.dp, shape, ambientColor = Brand.Sun, spotColor = Brand.Sun).clip(shape)
+            .background(Brush.linearGradient(listOf(Color(0xFFF5A04A), Color(0xFFD9621F)))).gloss(),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, null, tint = Color.White) }
 }
 
 @Composable
@@ -322,8 +346,8 @@ private fun ActivityCard(a: HomeActivity, onClick: () -> Unit) {
             Box {
                 if (a.imageUrl != null) RemoteImage(a.imageUrl, null, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
                 else Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f)))))
-                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceContainerLowest, shadowElevation = 2.dp, modifier = Modifier.padding(10.dp)) {
-                    Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(Modifier.padding(10.dp).glass(RoundedCornerShape(14.dp), elevation = 6.dp)) {
+                    Column(Modifier.padding(horizontal = 12.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         val parts = formatShortDate(a.startsAt).split(' ')
                         Text(parts.firstOrNull().orEmpty(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Text(parts.drop(1).joinToString(" "), style = MaterialTheme.typography.labelSmall)
@@ -357,8 +381,10 @@ private fun MediaThumb(m: HomeMedia, onClick: () -> Unit) {
 @Composable
 private fun CallToAction(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, body: String, colors: List<Color>, onClick: () -> Unit) {
     Box(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp).clip(RoundedCornerShape(24.dp))
-            .background(Brush.linearGradient(colors)).clickable(onClick = onClick).padding(20.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp).pressTilt(6f)
+            .shadow(18.dp, RoundedCornerShape(26.dp), ambientColor = colors.first(), spotColor = colors.first())
+            .clip(RoundedCornerShape(26.dp))
+            .background(Brush.linearGradient(colors)).gloss().clickable(onClick = onClick).padding(22.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {

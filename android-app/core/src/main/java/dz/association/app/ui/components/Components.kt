@@ -74,6 +74,9 @@ import dz.association.app.core.BuildConfig
 import dz.association.app.core.R
 import dz.association.app.core.network.AppError
 import dz.association.app.core.util.absoluteUrl
+import dz.association.app.ui.theme.pressTilt
+import dz.association.app.ui.theme.glass
+import dz.association.app.ui.theme.LocalGlass
 
 /** Shared UI state for screens that load data. */
 sealed interface UiState<out T> {
@@ -121,7 +124,7 @@ fun AppTopBar(title: String, onBack: (() -> Unit)? = null, actions: @Composable 
             }
         },
         actions = { actions() },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = if (LocalGlass.current) Color.Transparent else MaterialTheme.colorScheme.surface),
     )
 }
 
@@ -220,13 +223,24 @@ fun RemoteImage(url: String?, contentDescription: String?, modifier: Modifier = 
     )
 }
 
-/** Flat card with a hairline border — calmer and more "product" than heavy shadows. */
+/**
+ * Card used across the apps. Members' app (glass mode): frosted glass with a light-catching edge,
+ * depth shadow and a 3D tilt under the finger. Supervisors' app: flat card with a hairline border.
+ */
 @Composable
 fun AppCard(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
+    val shape = MaterialTheme.shapes.large
+    if (LocalGlass.current) {
+        val m = modifier.then(if (onClick != null) Modifier.pressTilt() else Modifier).glass(shape)
+        val colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        if (onClick != null) Card(onClick = onClick, modifier = m, shape = shape, colors = colors) { content() }
+        else Card(modifier = m, shape = shape, colors = colors) { content() }
+        return
+    }
     val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
     val border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
-    if (onClick != null) Card(onClick = onClick, modifier = modifier, shape = MaterialTheme.shapes.large, colors = colors, border = border) { content() }
-    else Card(modifier = modifier, shape = MaterialTheme.shapes.large, colors = colors, border = border) { content() }
+    if (onClick != null) Card(onClick = onClick, modifier = modifier, shape = shape, colors = colors, border = border) { content() }
+    else Card(modifier = modifier, shape = shape, colors = colors, border = border) { content() }
 }
 
 @Composable
@@ -252,7 +266,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
  */
 @Composable
 fun LogoImage(modifier: Modifier = Modifier, contentDescription: String? = null) {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     androidx.compose.foundation.Image(
         androidx.compose.ui.res.painterResource(R.drawable.logo), contentDescription,
         contentScale = ContentScale.Fit,

@@ -17,11 +17,11 @@ import androidx.compose.material.icons.outlined.HowToVote
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Icon
+import dz.association.app.ui.theme.glass
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -96,33 +96,41 @@ fun AppNavHost(
     }
 
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         bottomBar = {
             if (current in Routes.TABS) {
-                Column {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
-                NavigationBar(Modifier.testTag("bottom_bar"), containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, tonalElevation = 0.dp) {
-                    tabs.forEach { t ->
-                        val selected = current == t.route
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = {
-                                navController.navigate(t.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(if (selected) t.selectedIcon else t.icon, contentDescription = null) },
-                            label = { Text(stringResource(t.label), maxLines = 1, style = MaterialTheme.typography.labelSmall) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            ),
-                            modifier = Modifier.testTag("tab_${t.route}"),
-                        )
+                // Floating frosted-glass navigation bar.
+                androidx.compose.foundation.layout.Box(
+                    Modifier.navigationBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp),
+                ) {
+                    NavigationBar(
+                        Modifier.testTag("bottom_bar").glass(androidx.compose.foundation.shape.RoundedCornerShape(28.dp), elevation = 20.dp),
+                        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                        tonalElevation = 0.dp,
+                        windowInsets = androidx.compose.foundation.layout.WindowInsets(0),
+                    ) {
+                        tabs.forEach { t ->
+                            val selected = current == t.route
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = {
+                                    navController.navigate(t.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                icon = { Icon(if (selected) t.selectedIcon else t.icon, contentDescription = null) },
+                                label = { Text(stringResource(t.label), maxLines = 1, style = MaterialTheme.typography.labelSmall) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = androidx.compose.ui.graphics.Color.White,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    indicatorColor = MaterialTheme.colorScheme.primary,
+                                ),
+                                modifier = Modifier.testTag("tab_${t.route}"),
+                            )
+                        }
                     }
-                }
                 }
             }
         },

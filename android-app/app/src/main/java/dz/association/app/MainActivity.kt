@@ -14,6 +14,7 @@ import dz.association.app.core.prefs.AppPreferences
 import dz.association.app.core.prefs.LocalPrefs
 import dz.association.app.ui.navigation.AppNavHost
 import dz.association.app.ui.theme.AssociationTheme
+import dz.association.app.ui.theme.AuroraBackground
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
@@ -35,8 +36,10 @@ class MainActivity : AppCompatActivity() {
         val showIntro = savedInstanceState == null && initial.playIntro && deepLink == null
         setContent {
             val prefs by preferences.prefs.collectAsStateWithLifecycle(initialValue = initial)
-            AssociationTheme((prefs as LocalPrefs).theme) {
-                AppNavHost(showIntro = showIntro, pendingDeepLink = deepLink, onDeepLinkHandled = { deepLink = null })
+            AssociationTheme((prefs as LocalPrefs).theme, glass = true) {
+                AuroraBackground {
+                    AppNavHost(showIntro = showIntro, pendingDeepLink = deepLink, onDeepLinkHandled = { deepLink = null })
+                }
             }
         }
     }

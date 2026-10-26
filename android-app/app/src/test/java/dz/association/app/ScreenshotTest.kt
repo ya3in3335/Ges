@@ -2,7 +2,6 @@ package dz.association.app
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import android.graphics.Canvas
 import androidx.activity.ComponentActivity
@@ -56,9 +55,9 @@ class ScreenshotTest {
 
     @Test fun homeLight() {
         compose.setContent {
-            AssociationTheme {
+            AssociationTheme(glass = true) {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                    Surface { Column { HomeContent(sample, fromCache = false, user = null, nav = {}) } }
+                    dz.association.app.ui.theme.AuroraBackground { Column { HomeContent(sample, fromCache = false, user = null, nav = {}) } }
                 }
             }
         }
@@ -67,9 +66,9 @@ class ScreenshotTest {
 
     @Test fun homeDark() {
         compose.setContent {
-            AssociationTheme(dz.association.app.core.prefs.ThemeMode.DARK) {
+            AssociationTheme(dz.association.app.core.prefs.ThemeMode.DARK, glass = true) {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                    Surface { Column { HomeContent(sample, fromCache = true, user = null, nav = {}) } }
+                    dz.association.app.ui.theme.AuroraBackground { Column { HomeContent(sample, fromCache = false, user = null, nav = {}) } }
                 }
             }
         }
