@@ -41,6 +41,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
@@ -138,9 +140,14 @@ fun OfflineBanner(visible: Boolean) {
 
 @Composable
 fun SectionHeader(title: String, onSeeAll: (() -> Unit)? = null) {
-    Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 20.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).semantics { heading() })
-        if (onSeeAll != null) TextButton(onClick = onSeeAll) { Text(stringResource(R.string.see_all)) }
+    Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 24.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(width = 4.dp, height = 18.dp).clip(RoundedCornerShape(2.dp)).background(MaterialTheme.colorScheme.tertiary))
+        Spacer(Modifier.width(10.dp))
+        Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).semantics { heading() })
+        if (onSeeAll != null) TextButton(onClick = onSeeAll) {
+            Text(stringResource(R.string.see_all), style = MaterialTheme.typography.labelLarge)
+            Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.KeyboardArrowRight, null, Modifier.size(18.dp))
+        }
     }
 }
 
@@ -213,12 +220,13 @@ fun RemoteImage(url: String?, contentDescription: String?, modifier: Modifier = 
     )
 }
 
+/** Flat card with a hairline border — calmer and more "product" than heavy shadows. */
 @Composable
 fun AppCard(modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
-    val colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
-    val elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-    if (onClick != null) androidx.compose.material3.ElevatedCard(onClick = onClick, modifier = modifier, shape = MaterialTheme.shapes.large, colors = colors, elevation = elevation) { content() }
-    else androidx.compose.material3.ElevatedCard(modifier = modifier, shape = MaterialTheme.shapes.large, colors = colors, elevation = elevation) { content() }
+    val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest)
+    val border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+    if (onClick != null) Card(onClick = onClick, modifier = modifier, shape = MaterialTheme.shapes.large, colors = colors, border = border) { content() }
+    else Card(modifier = modifier, shape = MaterialTheme.shapes.large, colors = colors, border = border) { content() }
 }
 
 @Composable
@@ -238,20 +246,26 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
 
 
 /**
- * The official logo, proportions preserved. In dark theme it sits on a white plate so the
- * maroon lettering stays legible without recolouring the artwork.
+ * The official logo with a transparent background and its original colours and proportions.
+ * In dark theme a soft warm glow is painted behind it (no plate or frame) so the maroon
+ * lettering stays readable.
  */
 @Composable
 fun LogoImage(modifier: Modifier = Modifier, contentDescription: String? = null) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    val img = @Composable {
-        androidx.compose.foundation.Image(
-            androidx.compose.ui.res.painterResource(R.drawable.logo), contentDescription,
-            contentScale = ContentScale.Fit, modifier = if (dark) Modifier.padding(6.dp) else Modifier,
-        )
-    }
-    if (dark) Surface(color = Color.White, shape = MaterialTheme.shapes.medium, modifier = modifier) { img() }
-    else Box(modifier) { img() }
+    androidx.compose.foundation.Image(
+        androidx.compose.ui.res.painterResource(R.drawable.logo), contentDescription,
+        contentScale = ContentScale.Fit,
+        modifier = if (!dark) modifier else modifier.drawBehind {
+            drawRect(
+                // Fully transparent at radius = half the shorter side: no visible edge or box.
+                androidx.compose.ui.graphics.Brush.radialGradient(
+                    0f to Color(0xFFFFE9D8).copy(alpha = 0.42f), 0.55f to Color(0xFFFFE9D8).copy(alpha = 0.16f), 1f to Color.Transparent,
+                    center = center, radius = size.minDimension * 0.5f,
+                ),
+            )
+        },
+    )
 }
 
 @Composable

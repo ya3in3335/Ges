@@ -1,8 +1,17 @@
 package dz.association.app.ui.home
 
 import android.content.Intent
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Campaign
+import androidx.compose.material.icons.outlined.VolunteerActivism
+import androidx.compose.material.icons.outlined.HowToVote
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.clickable
 import android.net.Uri
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -127,29 +136,38 @@ private fun greeting(): String {
     return stringResource(if (h in 4..13) R.string.greeting_morning else R.string.greeting_evening)
 }
 
+/** Branded header: soft warm gradient, transparent logo, greeting and notifications. */
 @Composable
 private fun HomeHeader(user: User?, settings: Map<String, String>, nav: (String) -> Unit) {
-    Box(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
-        Column(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 20.dp, vertical = 12.dp)) {
+    val warm = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color(0xFF2A1519) else Color(0xFFFFEEE3)
+    Box(
+        Modifier.fillMaxWidth()
+            .background(Brush.verticalGradient(listOf(warm, MaterialTheme.colorScheme.background)))
+            .statusBarsPadding()
+            .padding(start = 20.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+    ) {
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 LogoImage(
-                    Modifier.height(64.dp).width(98.dp),
+                    Modifier.height(72.dp).width(110.dp),
                     contentDescription = settings["association_name_ar"]?.let { loc(it, settings["association_name_fr"]) } ?: stringResource(R.string.app_name),
                 )
                 Spacer(Modifier.weight(1f))
-                IconButton(onClick = { nav(Routes.NOTIFICATIONS) }) { Icon(Icons.Outlined.Notifications, stringResource(R.string.menu_notifications)) }
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerLowest, shadowElevation = 1.dp) {
+                    IconButton(onClick = { nav(Routes.NOTIFICATIONS) }) { Icon(Icons.Outlined.Notifications, stringResource(R.string.menu_notifications)) }
+                }
             }
-            Spacer(Modifier.height(10.dp))
-            val name = settings["association_name_ar"]?.let { loc(it, settings["association_name_fr"]) }
-            if (name != null) Text(name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(14.dp))
+            Text(greeting(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
-                if (user != null) stringResource(R.string.greeting_name, user.fullName.substringBefore(' ')) else greeting(),
-                style = MaterialTheme.typography.headlineMedium,
+                user?.fullName?.substringBefore(' ') ?: (settings["association_name_ar"]?.let { loc(it, settings["association_name_fr"]) } ?: stringResource(R.string.app_name)),
+                style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold,
             )
         }
     }
 }
 
+/** Four main shortcuts as round icon tiles. */
 @Composable
 private fun QuickLinks(nav: (String) -> Unit) {
     val links = listOf(
@@ -158,9 +176,18 @@ private fun QuickLinks(nav: (String) -> Unit) {
         Triple(R.string.menu_donations, Icons.Outlined.Savings, Routes.DONATIONS),
         Triple(R.string.menu_about, Icons.Outlined.Info, Routes.ABOUT),
     )
-    LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(links) { (label, icon, route) ->
-            AssistChip(onClick = { nav(route) }, label = { Text(stringResource(label)) }, leadingIcon = { Icon(icon, null, Modifier.size(18.dp)) })
+    Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+        links.forEach { (label, icon, route) ->
+            Column(
+                Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).clickable { nav(route) }.padding(vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.09f), modifier = Modifier.size(56.dp)) {
+                    Box(contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) }
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(stringResource(label), style = MaterialTheme.typography.labelMedium, maxLines = 1)
+            }
         }
     }
 }
@@ -168,7 +195,7 @@ private fun QuickLinks(nav: (String) -> Unit) {
 @Composable
 internal fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: (String) -> Unit) {
     val ctx = LocalContext.current
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 28.dp)) {
         item { HomeHeader(user, d.settings, nav) }
         item { OfflineBanner(fromCache) }
         item { QuickLinks(nav) }
@@ -181,10 +208,6 @@ internal fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: 
                 }
             }
         }
-        if (d.announcements.isNotEmpty()) {
-            item { SectionHeader(stringResource(R.string.home_announcements), onSeeAll = { nav(Routes.NEWS) }) }
-            items(d.announcements, key = { "a" + it.id }) { n -> NewsRow(n) { nav(Routes.news(n.id)) } }
-        }
         if (d.activities.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.home_upcoming), onSeeAll = { nav(Routes.ACTIVITIES) }) }
             item {
@@ -196,17 +219,25 @@ internal fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: 
         if (d.activePolls.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.home_polls), onSeeAll = { nav(Routes.POLLS) }) }
             items(d.activePolls, key = { "p" + it.id }) { p ->
-                AppCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), onClick = { nav(Routes.poll(p.id)) }) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(loc(p.titleAr, p.titleFr), style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(4.dp))
-                        Text(stringResource(R.string.poll_ends, formatDate(p.endsAt)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                AppCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp), onClick = { nav(Routes.poll(p.id)) }) {
+                    Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconBadge(Icons.Outlined.HowToVote)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(loc(p.titleAr, p.titleFr), style = MaterialTheme.typography.titleSmall)
+                            Text(stringResource(R.string.poll_ends, formatDate(p.endsAt)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.outline)
                     }
                 }
             }
         }
+        if (d.announcements.isNotEmpty()) {
+            item { SectionHeader(stringResource(R.string.home_announcements), onSeeAll = { nav(Routes.NEWS) }) }
+            items(d.announcements, key = { "a" + it.id }) { n -> NewsRow(n) { nav(Routes.news(n.id)) } }
+        }
         item {
-            CallToAction(stringResource(R.string.home_volunteer_title), stringResource(R.string.home_volunteer_body), Brand.Maroon) { nav(Routes.VOLUNTEER) }
+            CallToAction(Icons.Outlined.VolunteerActivism, stringResource(R.string.home_volunteer_title), stringResource(R.string.home_volunteer_body), listOf(Brand.Maroon, Brand.MaroonDeep)) { nav(Routes.VOLUNTEER) }
         }
         if (d.recentNews.isNotEmpty()) {
             item { SectionHeader(stringResource(R.string.home_news), onSeeAll = { nav(Routes.NEWS) }) }
@@ -221,7 +252,7 @@ internal fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: 
             }
         }
         item {
-            CallToAction(stringResource(R.string.home_donate_title), stringResource(R.string.home_donate_body), Color(0xFFB4561B)) { nav(Routes.DONATIONS) }
+            CallToAction(Icons.Outlined.Savings, stringResource(R.string.home_donate_title), stringResource(R.string.home_donate_body), listOf(Color(0xFFE9762B), Color(0xFFC4501F))) { nav(Routes.DONATIONS) }
         }
         val phone = d.settings["contact_phone"]
         val email = d.settings["contact_email"]
@@ -238,14 +269,21 @@ internal fun HomeContent(d: HomeResponse, fromCache: Boolean, user: User?, nav: 
 }
 
 @Composable
+private fun IconBadge(icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f), modifier = Modifier.size(44.dp)) {
+        Box(contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.tertiary) }
+    }
+}
+
+@Composable
 private fun FeaturedCard(n: HomeNews, onClick: () -> Unit) {
     AppCard(Modifier.width(300.dp), onClick = onClick) {
         Box(Modifier.fillMaxWidth().aspectRatio(16f / 10f)) {
             RemoteImage(n.imageUrl, null, Modifier.fillMaxSize())
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f)))))
-            Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
-                Pill(stringResource(R.string.campaign))
-                Spacer(Modifier.height(6.dp))
+            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)))))
+            Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+                Pill(stringResource(R.string.campaign), MaterialTheme.colorScheme.tertiary, Color.White)
+                Spacer(Modifier.height(8.dp))
                 Text(loc(n.titleAr, n.titleFr), style = MaterialTheme.typography.titleMedium, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
@@ -254,31 +292,53 @@ private fun FeaturedCard(n: HomeNews, onClick: () -> Unit) {
 
 @Composable
 fun NewsRow(n: HomeNews, onClick: () -> Unit) {
-    AppCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), onClick = onClick) {
+    AppCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp), onClick = onClick) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            RemoteImage(n.imageUrl, null, Modifier.size(84.dp).clip(RoundedCornerShape(12.dp)))
+            if (n.imageUrl != null) {
+                RemoteImage(n.imageUrl, null, Modifier.size(76.dp).clip(RoundedCornerShape(14.dp)))
+            } else {
+                Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f), modifier = Modifier.size(76.dp)) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(if (n.category == "announcement") Icons.Outlined.Campaign else Icons.Outlined.Newspaper, null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(loc(n.titleAr, n.titleFr), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val ex = loc(n.excerptAr.orEmpty(), n.excerptFr)
-                if (ex.isNotBlank()) Text(ex, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                n.publishedAt?.let { Text(formatDate(it), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline) }
+                if (ex.isNotBlank()) Text(ex, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                n.publishedAt?.let { Text(formatDate(it), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.tertiary) }
             }
         }
     }
 }
 
+/** Activity card with a calendar-style date badge. */
 @Composable
 private fun ActivityCard(a: HomeActivity, onClick: () -> Unit) {
-    AppCard(Modifier.width(240.dp), onClick = onClick) {
+    AppCard(Modifier.width(250.dp), onClick = onClick) {
         Column {
             Box {
-                RemoteImage(a.imageUrl, null, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
-                Box(Modifier.padding(10.dp)) { Pill(formatShortDate(a.startsAt), MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary) }
+                if (a.imageUrl != null) RemoteImage(a.imageUrl, null, Modifier.fillMaxWidth().aspectRatio(16f / 9f))
+                else Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), MaterialTheme.colorScheme.tertiary.copy(alpha = 0.18f)))))
+                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceContainerLowest, shadowElevation = 2.dp, modifier = Modifier.padding(10.dp)) {
+                    Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        val parts = formatShortDate(a.startsAt).split(' ')
+                        Text(parts.firstOrNull().orEmpty(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text(parts.drop(1).joinToString(" "), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
             }
-            Column(Modifier.padding(12.dp)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(loc(a.titleAr, a.titleFr), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                a.location?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1) }
+                a.location?.let {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.Place, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.width(4.dp))
+                        Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    }
+                }
             }
         }
     }
@@ -295,13 +355,20 @@ private fun MediaThumb(m: HomeMedia, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CallToAction(title: String, body: String, color: Color, onClick: () -> Unit) {
-    AppCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), onClick = onClick) {
-        Box(Modifier.background(Brush.linearGradient(listOf(color, color.copy(alpha = 0.78f)))).padding(20.dp).fillMaxWidth()) {
-            Column {
-                Text(title, style = MaterialTheme.typography.titleLarge, color = Color.White)
+private fun CallToAction(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, body: String, colors: List<Color>, onClick: () -> Unit) {
+    Box(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp).clip(RoundedCornerShape(24.dp))
+            .background(Brush.linearGradient(colors)).clickable(onClick = onClick).padding(20.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleLarge, color = Color.White, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(4.dp))
-                Text(body, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.92f))
+                Text(body, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.9f))
+            }
+            Spacer(Modifier.width(12.dp))
+            Surface(shape = CircleShape, color = Color.White.copy(alpha = 0.18f), modifier = Modifier.size(52.dp)) {
+                Box(contentAlignment = Alignment.Center) { Icon(icon, null, tint = Color.White) }
             }
         }
     }
@@ -310,10 +377,10 @@ private fun CallToAction(title: String, body: String, color: Color, onClick: () 
 @Composable
 private fun HomeSkeleton() {
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Skeleton(Modifier.width(100.dp).height(64.dp))
-        Skeleton(Modifier.fillMaxWidth(0.6f).height(28.dp))
-        Skeleton(Modifier.fillMaxWidth().height(180.dp))
-        repeat(3) { Skeleton(Modifier.fillMaxWidth().height(96.dp)) }
+        Skeleton(Modifier.width(110.dp).height(72.dp))
+        Skeleton(Modifier.fillMaxWidth(0.5f).height(30.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { repeat(4) { Skeleton(Modifier.size(56.dp), RoundedCornerShape(18.dp)) } }
+        Skeleton(Modifier.fillMaxWidth().height(170.dp))
+        repeat(3) { Skeleton(Modifier.fillMaxWidth().height(90.dp)) }
     }
 }
-

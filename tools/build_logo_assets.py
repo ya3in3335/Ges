@@ -44,18 +44,13 @@ for d, k in densities.items():
     folder = res / f"mipmap-{d}"
     folder.mkdir(parents=True, exist_ok=True)
     # Adaptive icon foreground: 108dp canvas, logo kept inside the 66dp safe zone.
-    fg = fit(logo, round(108 * k), round(108 * k), scale=62 / 108)
+    fg = fit(logo, round(108 * k), round(108 * k), scale=72 / 108)
     fg.save(folder / "ic_launcher_foreground.webp", "WEBP", lossless=True)
     # Legacy icons (pre-API 26): logo on white, square and round.
     sz = round(48 * k)
-    sq = fit(logo, sz, sz, WHITE, scale=0.86)
-    sq.convert("RGB").save(folder / "ic_launcher.webp", "WEBP", quality=95)
-    mask = Image.new("L", (sz, sz), 0)
-    from PIL import ImageDraw
-    ImageDraw.Draw(mask).ellipse((0, 0, sz - 1, sz - 1), fill=255)
-    rnd = fit(logo, sz, sz, WHITE, scale=0.70)
-    rnd.putalpha(mask)
-    rnd.save(folder / "ic_launcher_round.webp", "WEBP", lossless=True)
+    # Logo only, transparent background (no plate).
+    fit(logo, sz, sz, scale=0.96).save(folder / "ic_launcher.webp", "WEBP", lossless=True)
+    fit(logo, sz, sz, scale=0.96).save(folder / "ic_launcher_round.webp", "WEBP", lossless=True)
 
 # Play-store style 512 icon + web assets
 fit(logo, 512, 512, WHITE, scale=0.86).convert("RGB").save(out / "icon-512.png")

@@ -17,6 +17,11 @@ import androidx.compose.material.icons.outlined.HowToVote
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Icon
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -93,7 +98,9 @@ fun AppNavHost(
     Scaffold(
         bottomBar = {
             if (current in Routes.TABS) {
-                NavigationBar(Modifier.testTag("bottom_bar")) {
+                Column {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                NavigationBar(Modifier.testTag("bottom_bar"), containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, tonalElevation = 0.dp) {
                     tabs.forEach { t ->
                         val selected = current == t.route
                         NavigationBarItem(
@@ -106,10 +113,16 @@ fun AppNavHost(
                                 }
                             },
                             icon = { Icon(if (selected) t.selectedIcon else t.icon, contentDescription = null) },
-                            label = { Text(stringResource(t.label), maxLines = 1) },
+                            label = { Text(stringResource(t.label), maxLines = 1, style = MaterialTheme.typography.labelSmall) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            ),
                             modifier = Modifier.testTag("tab_${t.route}"),
                         )
                     }
+                }
                 }
             }
         },

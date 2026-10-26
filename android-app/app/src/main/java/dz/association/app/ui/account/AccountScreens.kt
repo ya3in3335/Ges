@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -150,6 +151,19 @@ fun AccountScreen(nav: (String) -> Unit, vm: AccountViewModel = hiltViewModel())
             } else {
                 AppCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        // Initials avatar (no photo is collected).
+                        androidx.compose.material3.Surface(
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(64.dp),
+                        ) {
+                            androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    u.fullName.split(' ').filter { it.isNotBlank() }.take(2).joinToString("") { it.take(1) },
+                                    style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary,
+                                )
+                            }
+                        }
                         Text(u.fullName, style = MaterialTheme.typography.titleLarge)
                         Text(u.email, style = ltr.merge(MaterialTheme.typography.bodyMedium), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(u.phone, style = ltr.merge(MaterialTheme.typography.bodyMedium), color = MaterialTheme.colorScheme.onSurfaceVariant)
