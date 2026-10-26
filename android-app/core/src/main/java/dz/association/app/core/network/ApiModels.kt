@@ -280,3 +280,49 @@ import kotlinx.serialization.Serializable
     @SerialName("created_at") val createdAt: Long,
 )
 @Serializable data class NotificationList(val items: List<AppNotification>)
+
+// ───────────── Lectures & meetings ─────────────
+
+@Serializable data class Lecture(
+    val id: String,
+    val kind: String = "lecture",
+    val titleAr: String,
+    val titleFr: String? = null,
+    val descriptionAr: String? = null,
+    val descriptionFr: String? = null,
+    val speaker: String? = null,
+    val location: String? = null,
+    val onlineUrl: String? = null,
+    val startsAt: Long,
+    val endsAt: Long,
+    val capacity: Int? = null,
+    val registeredCount: Int = 0,
+    val status: String = "published",
+    val phase: String = "upcoming",
+    val registrationOpen: Boolean = false,
+    val myRegistration: String? = null,
+)
+@Serializable data class LecturePage(val items: List<Lecture>, val hasMore: Boolean = false)
+@Serializable data class LectureDetail(val item: Lecture, val myRegistration: String? = null, val contactVerified: Boolean = false)
+
+/** Registration form answers (saved per member to prefill the next form). */
+@Serializable data class MemberProfile(
+    val firstName: String = "",
+    val lastName: String = "",
+    val gender: String? = null,
+    val birthYear: Int? = null,
+    val wilaya: String? = null,
+    val maritalStatus: String? = null,
+    val childrenCount: Int? = null,
+    val occupation: String? = null,
+    val occupationDetail: String? = null,
+)
+@Serializable data class LectureProfileResponse(
+    val profile: MemberProfile? = null,
+    val phone: String,
+    val phoneVerified: Boolean = false,
+    val email: String = "",
+    val emailVerified: Boolean = false,
+    val contactVerified: Boolean = false,
+)
+@Serializable data class LectureRegisterRequest(val profile: MemberProfile, val note: String? = null)

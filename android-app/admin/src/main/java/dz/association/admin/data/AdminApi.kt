@@ -42,6 +42,12 @@ interface AdminApi {
     @PATCH("api/admin/news/{id}") suspend fun updateNews(@Path("id") id: String, @Body b: NewsInput): OkResponse
     @DELETE("api/admin/news/{id}") suspend fun deleteNews(@Path("id") id: String): OkResponse
 
+    @GET("api/admin/lectures") suspend fun lectures(): AdminLecturePage
+    @POST("api/admin/lectures") suspend fun createLecture(@Body b: LectureInput): IdResponse
+    @PATCH("api/admin/lectures/{id}") suspend fun updateLecture(@Path("id") id: String, @Body b: LectureInput): OkResponse
+    @DELETE("api/admin/lectures/{id}") suspend fun deleteLecture(@Path("id") id: String): OkResponse
+    @GET("api/admin/lectures/{id}/registrations") suspend fun lectureRegistrations(@Path("id") id: String): LectureRegistrationList
+    @PATCH("api/admin/lectures/{id}/registrations/{userId}") suspend fun setLectureRegistration(@Path("id") id: String, @Path("userId") userId: String, @Body b: StatusBody): OkResponse
     @GET("api/admin/activities") suspend fun activities(@Query("page") page: Int): AdminActivityPage
     @POST("api/admin/activities") suspend fun createActivity(@Body b: ActivityInput): IdResponse
     @PATCH("api/admin/activities/{id}") suspend fun updateActivity(@Path("id") id: String, @Body b: ActivityInput): OkResponse

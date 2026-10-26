@@ -54,6 +54,11 @@ interface ApiService {
     @POST("api/polls/{id}/vote") suspend fun vote(@Path("id") id: String, @Body body: VoteRequest): VoteResponse
     @POST("api/activities/{id}/register") suspend fun registerActivity(@Path("id") id: String): OkResponse
     @POST("api/activities/{id}/cancel") suspend fun cancelActivity(@Path("id") id: String): OkResponse
+    @GET("api/lectures") suspend fun lectures(@Query("when") whenFilter: String, @Query("page") page: Int): LecturePage
+    @GET("api/lectures/{id}") suspend fun lecture(@Path("id") id: String): LectureDetail
+    @GET("api/me/lecture-profile") suspend fun lectureProfile(): LectureProfileResponse
+    @POST("api/lectures/{id}/register") suspend fun registerLecture(@Path("id") id: String, @Body body: LectureRegisterRequest): OkResponse
+    @POST("api/lectures/{id}/cancel") suspend fun cancelLecture(@Path("id") id: String): OkResponse
     @POST("api/volunteers") suspend fun applyVolunteer(@Body body: VolunteerRequest): OkResponse
     @GET("api/volunteers/me") suspend fun myVolunteer(): VolunteerMe
     @DELETE("api/volunteers/me") suspend fun withdrawVolunteer(): OkResponse

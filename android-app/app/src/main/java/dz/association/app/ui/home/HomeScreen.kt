@@ -41,6 +41,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Collections
+import androidx.compose.material.icons.outlined.CoPresent
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Newspaper
@@ -180,11 +181,12 @@ private fun HomeHeader(user: User?, settings: Map<String, String>, nav: (String)
     }
 }
 
-/** Four main shortcuts as glossy 3D "clay" tiles with coloured depth shadows. */
+/** Main shortcuts as glossy 3D "clay" tiles with coloured depth shadows. */
 @Composable
 private fun QuickLinks(nav: (String) -> Unit) {
     val links = listOf(
         listOf(R.string.menu_news, Icons.Outlined.Newspaper, Routes.NEWS, Brand.Maroon, Brand.MaroonDeep),
+        listOf(R.string.menu_lectures, Icons.Outlined.CoPresent, Routes.LECTURES, Color(0xFF2F7D6B), Color(0xFF1C5446)),
         listOf(R.string.menu_gallery, Icons.Outlined.Collections, Routes.GALLERY, Color(0xFFE9762B), Color(0xFFC4501F)),
         listOf(R.string.menu_donations, Icons.Outlined.Savings, Routes.DONATIONS, Brand.Ember, Color(0xFFB02E1B)),
         listOf(R.string.menu_about, Icons.Outlined.Info, Routes.ABOUT, Color(0xFF7A4B9A), Color(0xFF4F2D6B)),
@@ -196,14 +198,14 @@ private fun QuickLinks(nav: (String) -> Unit) {
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 val shape = RoundedCornerShape(22.dp)
                 Box(
-                    Modifier.size(62.dp).pressTilt(14f)
+                    Modifier.size(56.dp).pressTilt(14f)
                         .shadow(14.dp, shape, ambientColor = c1, spotColor = c1)
                         .clip(shape)
                         .background(Brush.linearGradient(listOf(c1.copy(alpha = 0.85f), c2)))
                         .gloss()
                         .clickable { nav(route) },
                     contentAlignment = Alignment.Center,
-                ) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(28.dp)) }
+                ) { Icon(icon, null, tint = Color.White, modifier = Modifier.size(26.dp)) }
                 Spacer(Modifier.height(8.dp))
                 Text(stringResource(label), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
             }

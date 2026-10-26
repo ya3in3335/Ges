@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.CoPresent
 import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.History
@@ -201,6 +202,7 @@ private val STATS = listOf(
 private data class Tile(val module: Module, val label: Int, val icon: ImageVector)
 private val TILES = listOf(
     Tile(Module.NEWS, R.string.a_news, Icons.Outlined.Newspaper),
+    Tile(Module.LECTURES, dz.association.app.core.R.string.lectures_title, Icons.Outlined.CoPresent),
     Tile(Module.ACTIVITIES, R.string.a_activities, Icons.Outlined.Event),
     Tile(Module.POLLS, R.string.a_polls, Icons.Outlined.HowToVote),
     Tile(Module.VOLUNTEERS, R.string.a_volunteers, Icons.Outlined.VolunteerActivism),

@@ -15,6 +15,7 @@ import dz.association.admin.ui.screens.ActivitiesScreen
 import dz.association.admin.ui.screens.AuditScreen
 import dz.association.admin.ui.screens.DonationsScreen
 import dz.association.admin.ui.screens.HomeScreen
+import dz.association.admin.ui.screens.LecturesScreen
 import dz.association.admin.ui.screens.ActivationScreen
 import dz.association.admin.ui.screens.DevicesScreen
 import dz.association.admin.ui.screens.MediaScreen
@@ -34,7 +35,7 @@ class RootVm @Inject constructor(session: AdminSession) : ViewModel() {
 
 /** Module routes and the minimum role that may open them (the server enforces the same rules). */
 enum class Module(val route: String, val minRole: String) {
-    USERS("users", "ADMIN"), DEVICES("devices", "ADMIN"), TELEGRAM("telegram", "ADMIN"), NEWS("news", "EDITOR"), ACTIVITIES("activities", "EDITOR"),
+    USERS("users", "ADMIN"), DEVICES("devices", "ADMIN"), TELEGRAM("telegram", "ADMIN"), NEWS("news", "EDITOR"), ACTIVITIES("activities", "EDITOR"), LECTURES("lectures", "EDITOR"),
     POLLS("polls", "ADMIN"), VOLUNTEERS("volunteers", "ADMIN"), MEDIA("media", "EDITOR"), DONATIONS("donations", "ADMIN"),
     NOTIFICATIONS("notifications", "EDITOR"), SETTINGS("settings", "SUPER_ADMIN"), AUDIT("audit", "ADMIN"),
 }
@@ -60,6 +61,7 @@ fun AdminNav(vm: RootVm = hiltViewModel()) {
                     Module.TELEGRAM -> TelegramScreen(back)
                     Module.NEWS -> NewsScreen(back, role)
                     Module.ACTIVITIES -> ActivitiesScreen(back)
+                    Module.LECTURES -> LecturesScreen(back, role)
                     Module.POLLS -> PollsScreen(back)
                     Module.VOLUNTEERS -> VolunteersScreen(back)
                     Module.MEDIA -> MediaScreen(back)

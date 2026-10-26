@@ -245,3 +245,39 @@ import kotlinx.serialization.Serializable
     val user: dz.association.app.core.network.User? = null,
     val tokens: dz.association.app.core.network.Tokens? = null,
 )
+
+@Serializable data class AdminLecturePage(val items: List<dz.association.app.core.network.Lecture>)
+@Serializable data class LectureInput(
+    val kind: String,
+    val titleAr: String,
+    val titleFr: String? = null,
+    val descriptionAr: String? = null,
+    val descriptionFr: String? = null,
+    val speaker: String? = null,
+    val location: String? = null,
+    val onlineUrl: String? = null,
+    val startsAt: Long,
+    val endsAt: Long,
+    val capacity: Int? = null,
+    val registrationOpen: Boolean = true,
+    val status: String = "draft",
+    val notify: Boolean = true,
+)
+@Serializable data class LectureRegistration(
+    val userId: String,
+    val status: String,
+    val firstName: String,
+    val lastName: String,
+    val phone: String,
+    val email: String? = null,
+    val gender: String? = null,
+    val birthYear: Int? = null,
+    val wilaya: String? = null,
+    val maritalStatus: String? = null,
+    val childrenCount: Int? = null,
+    val occupation: String? = null,
+    val occupationDetail: String? = null,
+    val note: String? = null,
+    val createdAt: Long = 0,
+)
+@Serializable data class LectureRegistrationList(val items: List<LectureRegistration>)

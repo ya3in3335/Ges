@@ -23,6 +23,11 @@ object Routes {
     const val REGISTER = "register"
     const val FORGOT = "forgot"
     const val VERIFY = "verify"
+    const val LECTURES = "lectures"
+    const val LECTURE_DETAIL = "lecture/{id}"
+    const val LECTURE_FORM = "lecture/{id}/register"
+    fun lecture(id: String) = "lecture/${Uri.encode(id)}"
+    fun lectureForm(id: String) = "lecture/${Uri.encode(id)}/register"
     const val VERIFY_EMAIL = "verify_email?next={next}"
     fun verifyEmail(next: String? = null) = "verify_email?next=${Uri.encode(next ?: "")}"
     const val SETTINGS = "settings"
@@ -45,6 +50,7 @@ object Routes {
             "news" -> id?.let(::news) ?: NEWS
             "activities" -> id?.let(::activity) ?: ACTIVITIES
             "polls" -> id?.let(::poll) ?: POLLS
+            "lectures" -> id?.let(::lecture) ?: LECTURES
             "volunteer" -> VOLUNTEER
             "notifications" -> NOTIFICATIONS
             "donations" -> DONATIONS

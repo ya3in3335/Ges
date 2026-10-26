@@ -44,6 +44,9 @@ import dz.association.app.ui.account.LoginScreen
 import dz.association.app.ui.account.RegisterScreen
 import dz.association.app.ui.account.SettingsScreen
 import dz.association.app.ui.account.VerifyEmailScreen
+import dz.association.app.ui.lectures.LectureDetailScreen
+import dz.association.app.ui.lectures.LectureFormScreen
+import dz.association.app.ui.lectures.LecturesScreen
 import dz.association.app.ui.account.VerifyPhoneScreen
 import dz.association.app.ui.activities.ActivitiesScreen
 import dz.association.app.ui.activities.ActivityDetailScreen
@@ -144,6 +147,9 @@ fun AppNavHost(
             composable(Routes.PHOTO, listOf(navArgument("url") { type = NavType.StringType })) { PhotoScreen(it.arguments?.getString("url").orEmpty(), back) }
             composable(Routes.DONATIONS) { DonationsScreen(back, nav) }
             composable(Routes.ABOUT) { AboutScreen(back) }
+            composable(Routes.LECTURES) { LecturesScreen(back, nav) }
+            composable(Routes.LECTURE_DETAIL, listOf(navArgument("id") { type = NavType.StringType })) { LectureDetailScreen(back, nav) }
+            composable(Routes.LECTURE_FORM, listOf(navArgument("id") { type = NavType.StringType })) { LectureFormScreen(back, onDone = { navController.popBackStack() }) }
             composable(Routes.NOTIFICATIONS) { NotificationsScreen(back, nav) }
             composable(Routes.LOGIN) {
                 LoginScreen(back, nav, onDone = { verified ->
