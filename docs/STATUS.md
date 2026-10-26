@@ -13,10 +13,15 @@ Legend: ✅ done and verified here · 🧪 covered by automated tests · 🔑 wa
 | Backend REST API, D1 schema + migration, RBAC (5 roles), rate limiting, audit logs | ✅ 🧪 |
 | Telegram phone verification + private channel notifications with retry outbox | ✅ 🧪 and smoke-tested on the real Workers runtime (`wrangler dev` + local D1) |
 | Voting: eligibility (verified / approved member list), anonymous ballots, one vote per account, immutable ballots, result visibility rules | ✅ 🧪 |
-| Admin dashboard (all modules listed in the brief) | ✅ 🧪 and exercised end-to-end in Chromium against the local Worker |
+| Supervisors' Android app (separate APK): overview, users, Telegram stats, news, activities + participants, polls (members, results), volunteers, media (links + phone upload), donations, notifications, settings, audit | ✅ compiles, lint clean, debug + minified release build · 🧪 7 tests (role gate, member accounts refused, no admin code in the members' app) |
+| Web admin dashboard (optional, same modules) | ✅ 🧪 and exercised end-to-end in Chromium against the local Worker |
 | Push notifications (FCM HTTP v1 from the Worker; topic subscriptions in the app) | ✅ code complete · 🔑 needs Firebase project |
 | Download website (AR/FR, install guide, privacy policy draft, version/APK/SHA-256 from API) | ✅ rendered and checked in Chromium |
 | GitHub Actions: Android tests, lint, debug APK, signed release + GitHub Release; backend tests + manual deploy; web build | ✅ written and YAML-validated · not yet run on GitHub |
+
+## Deployed (production, Cloudflare free plan)
+- API: `https://association-api.yacincianai31.workers.dev` (D1 `association_db`, cron every 10 min)
+- Telegram bot @forge_flow_bot connected by webhook (secret-header protected). Admin channel: waiting for the bot to be added as channel admin (the Worker records the channel id automatically).
 
 ## Tested here (actual runs)
 - Backend: 108 Vitest tests passing (real SQL via a `node:sqlite` D1 shim) + `tsc` + Wrangler bundle.

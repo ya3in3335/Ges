@@ -227,7 +227,7 @@ fun PollDetailScreen(back: () -> Unit, nav: (String) -> Unit, vm: PollDetailView
                             }
                         }
 
-                        if (d.results != null) Text(stringResource(R.string.poll_total_votes, d.results.totalVotes), style = MaterialTheme.typography.labelLarge)
+                        if (d.results != null) Text(stringResource(R.string.poll_total_votes, d.results?.totalVotes ?: 0), style = MaterialTheme.typography.labelLarge)
                         else if (p.resultVisibility == "after_close") Text(stringResource(R.string.poll_results_hidden), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
                         else if (p.resultVisibility == "admins") Text(stringResource(R.string.poll_results_admins), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
 

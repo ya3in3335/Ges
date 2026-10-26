@@ -1,0 +1,87 @@
+// Supervisors' app: a separate APK (dz.association.admin) for EDITOR / ADMIN / SUPER_ADMIN accounts.
+// Members never receive any administration code. Every permission is enforced by the server.
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
+}
+
+fun prop(name: String, default: String = ""): String =
+    (project.findProperty(name) as String?) ?: System.getenv(name) ?: default
+
+android {
+    namespace = "dz.association.admin"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "dz.association.admin"
+        minSdk = 24
+        targetSdk = 35
+        versionCode = prop("VERSION_CODE", "1").toInt()
+        versionName = prop("VERSION_NAME", "1.0.0")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        val ks = prop("ANDROID_KEYSTORE_FILE")
+        if (ks.isNotEmpty() && file(ks).exists()) {
+            create("release") {
+                storeFile = file(ks)
+                storePassword = prop("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = prop("ANDROID_KEY_ALIAS")
+                keyPassword = prop("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.findByName("release")
+        }
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs += listOf("-opt-in=androidx.compose.material3.ExperimentalMaterial3Api", "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi")
+    }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+    androidResources { generateLocaleConfig = true }
+    testOptions { unitTests.isIncludeAndroidResources = true }
+    lint {
+        abortOnError = true
+        disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
+    }
+    packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
+}
+
+dependencies {
+    implementation(project(":core"))
+    implementation(libs.hilt.android)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.navigation.compose)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.hilt.compiler)
+    debugImplementation(libs.compose.ui.tooling)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit)
+    testImplementation(libs.retrofit.serialization)
+}

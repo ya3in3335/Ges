@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
-import dz.association.app.R
+import dz.association.app.core.R
 import dz.association.app.core.prefs.ThemeMode
 
 // Palette taken from the official logo: tower orange, sun red-orange and the maroon lettering.

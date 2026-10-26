@@ -98,7 +98,7 @@ fun DonationsScreen(back: () -> Unit, nav: (String) -> Unit, vm: DonationsViewMo
                         if (!d.ccpAccount.isNullOrBlank()) AppCard(Modifier.fillMaxWidth().padding(16.dp)) {
                             Column(Modifier.padding(16.dp)) {
                                 Text(stringResource(R.string.donations_ccp), style = MaterialTheme.typography.titleMedium)
-                                CopyRow(stringResource(R.string.donations_ccp), d.ccpAccount)
+                                CopyRow(stringResource(R.string.donations_ccp), d.ccpAccount.orEmpty())
                                 d.ccpKey?.let { CopyRow(stringResource(R.string.donations_ccp_key), it) }
                                 d.ccpHolder?.let { Text("${stringResource(R.string.donations_holder)}: $it", style = MaterialTheme.typography.bodyMedium) }
                             }
@@ -106,7 +106,7 @@ fun DonationsScreen(back: () -> Unit, nav: (String) -> Unit, vm: DonationsViewMo
                         if (!d.bankAccount.isNullOrBlank()) AppCard(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                             Column(Modifier.padding(16.dp)) {
                                 Text(d.bankName ?: stringResource(R.string.donations_bank), style = MaterialTheme.typography.titleMedium)
-                                CopyRow(stringResource(R.string.donations_bank), d.bankAccount)
+                                CopyRow(stringResource(R.string.donations_bank), d.bankAccount.orEmpty())
                                 d.bankHolder?.let { Text("${stringResource(R.string.donations_holder)}: $it", style = MaterialTheme.typography.bodyMedium) }
                             }
                         }

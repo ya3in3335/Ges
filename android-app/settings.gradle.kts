@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "AssociationApp"
-include(":app")
+include(":core", ":app", ":admin")

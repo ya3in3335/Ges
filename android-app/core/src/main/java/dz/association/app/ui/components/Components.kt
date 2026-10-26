@@ -41,6 +41,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,8 +68,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import dz.association.app.BuildConfig
-import dz.association.app.R
+import dz.association.app.core.BuildConfig
+import dz.association.app.core.R
 import dz.association.app.core.network.AppError
 import dz.association.app.core.util.absoluteUrl
 
@@ -243,3 +253,25 @@ fun LogoImage(modifier: Modifier = Modifier, contentDescription: String? = null)
     if (dark) Surface(color = Color.White, shape = MaterialTheme.shapes.medium, modifier = modifier) { img() }
     else Box(modifier) { img() }
 }
+
+@Composable
+fun PasswordField(value: String, onChange: (String) -> Unit, label: String, modifier: Modifier = Modifier, isError: Boolean = false, supporting: String? = null) {
+    var visible by rememberSaveable { mutableStateOf(false) }
+    OutlinedTextField(
+        value = value, onValueChange = onChange, label = { Text(label) }, singleLine = true, isError = isError,
+        supportingText = supporting?.let { { Text(it) } },
+        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        trailingIcon = {
+            IconButton(onClick = { visible = !visible }) {
+                Icon(if (visible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, stringResource(R.string.show_password))
+            }
+        },
+        modifier = modifier.fillMaxWidth(),
+    )
+}
+
+@Composable
+fun roleLabel(role: String) = stringResource(
+    when (role) { "SUPER_ADMIN" -> R.string.role_SUPER_ADMIN; "ADMIN" -> R.string.role_ADMIN; "EDITOR" -> R.string.role_EDITOR; "VOLUNTEER" -> R.string.role_VOLUNTEER; else -> R.string.role_USER },
+)

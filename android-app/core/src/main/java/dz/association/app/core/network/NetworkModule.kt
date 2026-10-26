@@ -6,7 +6,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import dz.association.app.BuildConfig
+import dz.association.app.core.BuildConfig
 import dz.association.app.core.auth.KeystoreCrypto
 import dz.association.app.core.auth.SessionManager
 import dz.association.app.core.auth.TokenStore
@@ -57,10 +57,12 @@ object NetworkModule {
     }
 
     @Provides @Singleton
-    fun api(client: OkHttpClient, json: Json): ApiService = Retrofit.Builder()
+    fun retrofit(client: OkHttpClient, json: Json): Retrofit = Retrofit.Builder()
         .baseUrl(BuildConfig.API_BASE_URL)
         .client(client)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
-        .create(ApiService::class.java)
+
+    @Provides @Singleton
+    fun api(retrofit: Retrofit): ApiService = retrofit.create(ApiService::class.java)
 }

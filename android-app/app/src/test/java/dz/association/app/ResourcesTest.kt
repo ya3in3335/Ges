@@ -36,8 +36,8 @@ class ResourcesTest {
     private fun keys(path: String) = Regex("<string name=\"([a-zA-Z0-9_]+)\"").findAll(File(path).readText()).map { it.groupValues[1] }.toSet()
 
     @Test fun everyStringIsTranslatedToFrench() {
-        val ar = keys("src/main/res/values/strings.xml")
-        val fr = keys("src/main/res/values-fr/strings.xml")
+        val ar = keys("../core/src/main/res/values/strings.xml")
+        val fr = keys("../core/src/main/res/values-fr/strings.xml")
         assertTrue(ar.size > 100)
         assertEquals("missing in French", emptySet<String>(), ar - fr)
         assertEquals("missing in Arabic", emptySet<String>(), fr - ar)

@@ -47,6 +47,7 @@ import dz.association.app.core.network.Result
 import dz.association.app.core.push.PushManager
 import dz.association.app.data.AuthRepository
 import dz.association.app.ui.components.AppTopBar
+import dz.association.app.ui.components.PasswordField
 import dz.association.app.ui.components.PrimaryButton
 import dz.association.app.ui.components.errorMessage
 import dz.association.app.ui.navigation.Routes
@@ -89,22 +90,6 @@ class AuthViewModel @Inject constructor(private val repo: AuthRepository, privat
     fun reset(id: String, code: String, pw: String) = run({ repo.reset(id, code, pw) }) { info.value = R.string.reset_done }
 }
 
-@Composable
-fun PasswordField(value: String, onChange: (String) -> Unit, label: String, modifier: Modifier = Modifier, isError: Boolean = false, supporting: String? = null) {
-    var visible by rememberSaveable { mutableStateOf(false) }
-    OutlinedTextField(
-        value = value, onValueChange = onChange, label = { Text(label) }, singleLine = true, isError = isError,
-        supportingText = supporting?.let { { Text(it) } },
-        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        trailingIcon = {
-            IconButton(onClick = { visible = !visible }) {
-                Icon(if (visible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, stringResource(R.string.show_password))
-            }
-        },
-        modifier = modifier.fillMaxWidth(),
-    )
-}
 
 // Phone numbers and e-mails are always written left-to-right, even inside the RTL layout.
 internal val ltr: androidx.compose.ui.text.TextStyle

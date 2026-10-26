@@ -214,7 +214,7 @@ fun ActivityDetailScreen(back: () -> Unit, nav: (String) -> Unit, vm: ActivityDe
                             Text(loc(a.titleAr, a.titleFr), style = MaterialTheme.typography.headlineSmall)
                             InfoLine(Icons.Outlined.CalendarMonth, "${formatDateTime(a.startsAt)} — ${formatDateTime(a.endsAt)}")
                             a.location?.let { InfoLine(Icons.Outlined.Place, it) }
-                            InfoLine(Icons.Outlined.Groups, if (a.capacity != null) stringResource(R.string.activity_capacity, a.registeredCount, a.capacity) else stringResource(R.string.activity_participants, a.registeredCount))
+                            InfoLine(Icons.Outlined.Groups, a.capacity?.let { cap -> stringResource(R.string.activity_capacity, a.registeredCount, cap) } ?: stringResource(R.string.activity_participants, a.registeredCount))
                             if (a.latitude != null && a.longitude != null) {
                                 TextButton(onClick = {
                                     runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:${a.latitude},${a.longitude}?q=${a.latitude},${a.longitude}"))) }
@@ -248,7 +248,7 @@ fun ActivityDetailScreen(back: () -> Unit, nav: (String) -> Unit, vm: ActivityDe
                                     }
                                 }
                                 !a.registrationOpen -> Text(stringResource(R.string.activity_closed), color = MaterialTheme.colorScheme.outline)
-                                a.capacity != null && a.registeredCount >= a.capacity -> Text(stringResource(R.string.activity_full), color = MaterialTheme.colorScheme.error)
+                                a.registeredCount >= (a.capacity ?: Int.MAX_VALUE) -> Text(stringResource(R.string.activity_full), color = MaterialTheme.colorScheme.error)
                                 !vm.signedIn -> PrimaryButton(stringResource(R.string.login), { nav(Routes.LOGIN) })
                                 else -> PrimaryButton(stringResource(R.string.activity_register), { vm.toggleRegistration(false) }, Modifier.testTag("register_activity"), enabled = !s.data.fromCache, loading = busy)
                             }

@@ -5,9 +5,11 @@ download website for the association whose logo and intro animation are in `bran
 
 | Folder | What | Stack |
 |---|---|---|
-| `android-app/` | Android app (Arabic default, RTL; French) | Kotlin, Jetpack Compose, M3, Hilt, Retrofit, Room, DataStore, WorkManager, Media3, Coil, FCM |
+| `android-app/app` | Members' Android app (Arabic default, RTL; French) — no administration code | Kotlin, Jetpack Compose, M3, Hilt, Retrofit, Room, DataStore, WorkManager, Media3, Coil, FCM |
+| `android-app/admin` | Supervisors' Android app (separate APK `dz.association.admin`, EDITOR+ only) | same stack |
+| `android-app/core` | Code shared by both apps: network, secure session, theme, components, strings | Android library |
 | `backend/` | REST API + Telegram bot webhook + cron | Cloudflare Workers (TypeScript), D1, optional R2 |
-| `admin-dashboard/` | Web administration (Arabic RTL) | React, TypeScript, Vite → Cloudflare Pages |
+| `admin-dashboard/` | Optional web administration (same features as the admin app) | React, TypeScript, Vite → Cloudflare Pages |
 | `distribution-website/` | Official APK download site | Static HTML/CSS/JS → Cloudflare Pages |
 | `telegram-bot/` | Bot webhook / channel setup scripts | bash + Bot API |
 | `branding/` | Client's original animation sources (ZIP contents) and derived logo | — |
@@ -30,7 +32,7 @@ cd android-app && ./gradlew :app:testDebugUnitTest :app:assembleDebug -PAPI_BASE
 
 ## Tests
 ```bash
-cd backend && npm test                      # 108 tests (auth, Telegram abuse cases, voting, RBAC, migrations…)
+cd backend && npm test                      # 109 tests (auth, Telegram abuse cases, voting, RBAC, migrations…)
 cd admin-dashboard && npm test              # API client / session tests
-cd android-app && ./gradlew :app:testDebugUnitTest   # 19 JVM/Robolectric tests
+cd android-app && ./gradlew :app:testDebugUnitTest :admin:testDebugUnitTest   # 26 JVM/Robolectric tests
 ```

@@ -46,15 +46,17 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests (JVM + Robolectric)
-        run: ./gradlew --stacktrace :app:testDebugUnitTest
+        run: ./gradlew --stacktrace :app:testDebugUnitTest :admin:testDebugUnitTest
       - name: Lint
-        run: ./gradlew :app:lintDebug
-      - name: Assemble debug APK
-        run: ./gradlew :app:assembleDebug -PVERSION_CODE=${{ github.run_number }}
+        run: ./gradlew :app:lintDebug :admin:lintDebug
+      - name: Assemble debug APKs (members + supervisors)
+        run: ./gradlew :app:assembleDebug :admin:assembleDebug -PVERSION_CODE=${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: android-app/app/build/outputs/apk/debug/*.apk
+          name: debug-apks
+          path: |
+            android-app/app/build/outputs/apk/debug/*.apk
+            android-app/admin/build/outputs/apk/debug/*.apk
           retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always()
@@ -62,7 +64,7 @@ jobs:
           name: test-and-lint-reports
           path: |
             android-app/app/build/reports/tests/
-            android-app/app/build/reports/lint-results-debug.html
+            android-app/*/build/reports/lint-results-debug.html
           retention-days: 7
 
   release:
@@ -94,21 +96,22 @@ jobs:
           if [[ ! "$GITHUB_REF" == refs/tags/v* ]]; then NAME="0.0.${{ github.run_number }}"; fi
           echo "VERSION_NAME=$NAME" >> "$GITHUB_ENV"
           echo "VERSION_CODE=$(( ${{ github.run_number }} + 100 ))" >> "$GITHUB_ENV"
-      - name: Assemble signed release APK
+      - name: Assemble signed release APKs
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease -PVERSION_NAME=$VERSION_NAME -PVERSION_CODE=$VERSION_CODE
+        run: ./gradlew :app:assembleRelease :admin:assembleRelease -PVERSION_NAME=$VERSION_NAME -PVERSION_CODE=$VERSION_CODE
       - name: Verify signature and checksum
         run: |
-          APK=app/build/outputs/apk/release/app-release.apk
-          test -f "$APK" || { echo "::error::Release APK is not signed (check signing secrets)"; exit 1; }
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          "$BT/apksigner" verify --print-certs "$APK"
-          OUT="association-$VERSION_NAME.apk"
-          cp "$APK" "$OUT"
-          sha256sum "$OUT" | tee "$OUT.sha256"
+          for pair in "app/build/outputs/apk/release/app-release.apk:association-$VERSION_NAME.apk" "admin/build/outputs/apk/release/admin-release.apk:association-admin-$VERSION_NAME.apk"; do
+            APK="${pair%%:*}"; OUT="${pair##*:}"
+            test -f "$APK" || { echo "::error::$APK is not signed (check signing secrets)"; exit 1; }
+            "$BT/apksigner" verify --print-certs "$APK"
+            cp "$APK" "$OUT"
+            sha256sum "$OUT" | tee "$OUT.sha256"
+          done
           rm -f "$ANDROID_KEYSTORE_FILE"
       - uses: actions/upload-artifact@v4
         with:

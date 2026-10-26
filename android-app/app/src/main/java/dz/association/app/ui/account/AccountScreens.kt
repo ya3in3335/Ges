@@ -66,7 +66,9 @@ import dz.association.app.core.util.AppLocale
 import dz.association.app.data.AuthRepository
 import dz.association.app.ui.components.AppCard
 import dz.association.app.ui.components.AppTopBar
+import dz.association.app.ui.components.PasswordField
 import dz.association.app.ui.components.Pill
+import dz.association.app.ui.components.roleLabel
 import dz.association.app.ui.components.PrimaryButton
 import dz.association.app.ui.components.SectionHeader
 import dz.association.app.ui.components.errorMessage
@@ -127,10 +129,6 @@ class AccountViewModel @Inject constructor(
     }
 }
 
-@Composable
-fun roleLabel(role: String) = stringResource(
-    when (role) { "SUPER_ADMIN" -> R.string.role_SUPER_ADMIN; "ADMIN" -> R.string.role_ADMIN; "EDITOR" -> R.string.role_EDITOR; "VOLUNTEER" -> R.string.role_VOLUNTEER; else -> R.string.role_USER },
-)
 
 @Composable
 fun AccountScreen(nav: (String) -> Unit, vm: AccountViewModel = hiltViewModel()) {
