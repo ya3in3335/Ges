@@ -17,13 +17,9 @@ import androidx.compose.material.icons.outlined.HowToVote
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Icon
-import dz.association.app.ui.theme.glass
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +27,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -104,34 +99,18 @@ fun AppNavHost(
                 androidx.compose.foundation.layout.Box(
                     Modifier.navigationBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp),
                 ) {
-                    NavigationBar(
-                        Modifier.testTag("bottom_bar").glass(androidx.compose.foundation.shape.RoundedCornerShape(28.dp), elevation = 20.dp),
-                        containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        tonalElevation = 0.dp,
-                        windowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-                    ) {
-                        tabs.forEach { t ->
-                            val selected = current == t.route
-                            NavigationBarItem(
-                                selected = selected,
-                                onClick = {
-                                    navController.navigate(t.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
-                                icon = { Icon(if (selected) t.selectedIcon else t.icon, contentDescription = null) },
-                                label = { Text(stringResource(t.label), maxLines = 1, style = MaterialTheme.typography.labelSmall) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = androidx.compose.ui.graphics.Color.White,
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    indicatorColor = MaterialTheme.colorScheme.primary,
-                                ),
-                                modifier = Modifier.testTag("tab_${t.route}"),
-                            )
-                        }
-                    }
+                    val barItems = tabs.map { BarItem(it.route, stringResource(it.label), it.icon, it.selectedIcon) }
+                    GlassBottomBar(
+                        items = barItems,
+                        selectedIndex = tabs.indexOfFirst { it.route == current },
+                        onSelect = { i ->
+                            navController.navigate(tabs[i].route) {
+                                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                    )
                 }
             }
         },

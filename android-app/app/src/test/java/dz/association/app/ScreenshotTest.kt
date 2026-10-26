@@ -8,6 +8,9 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Favorite
 import dz.association.app.core.network.HomeActivity
 import dz.association.app.core.network.HomeNews
 import dz.association.app.core.network.HomePoll
@@ -73,5 +76,24 @@ class ScreenshotTest {
             }
         }
         save("home_dark")
+    }
+
+    @Test fun bottomBar() {
+        compose.setContent {
+            AssociationTheme(glass = true) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    dz.association.app.ui.theme.AuroraBackground {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(14.dp)) {
+                            val icon = androidx.compose.material.icons.Icons.Filled.Favorite
+                            dz.association.app.ui.navigation.GlassBottomBar(
+                                items = listOf("الرئيسية", "الأنشطة", "التصويت", "التطوع", "حسابي").mapIndexed { i, l -> dz.association.app.ui.navigation.BarItem("t$i", l, icon, icon) },
+                                selectedIndex = 0, onSelect = {},
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        save("bottom_bar")
     }
 }
