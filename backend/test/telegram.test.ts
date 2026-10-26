@@ -235,3 +235,14 @@ describe('admin channel detection', () => {
     expect((await app.req('GET', '/api/settings')).body.settings.telegram_detected_channel).toBeUndefined();
   });
 });
+
+describe('admin channel detection from a channel post', () => {
+  it('records the channel id when a post is published in the channel', async () => {
+    await app.req('POST', '/telegram/webhook', {
+      headers: { 'x-telegram-bot-api-secret-token': 'webhook-secret-xyz' },
+      body: { update_id: 77, channel_post: { message_id: 1, chat: { id: -100777, type: 'channel', title: 'قناة' }, text: 'تجربة' } },
+    });
+    const row = app.db.raw.prepare(`SELECT value FROM application_settings WHERE key = 'telegram_detected_channel'`).get() as { value: string };
+    expect(JSON.parse(row.value).id).toBe(-100777);
+  });
+});

@@ -84,7 +84,7 @@ interface TgChatMember {
   from: TgUser;
   new_chat_member: { status: string; user: TgUser; can_post_messages?: boolean };
 }
-interface TgUpdate { update_id: number; message?: TgMessage; my_chat_member?: TgChatMember; callback_query?: Parameters<typeof handleDeviceDecision>[1] }
+interface TgUpdate { update_id: number; message?: TgMessage; my_chat_member?: TgChatMember; channel_post?: { chat: { id: number; type: string; title?: string } }; callback_query?: Parameters<typeof handleDeviceDecision>[1] }
 
 type Lang = 'ar' | 'fr';
 const T = {
@@ -155,6 +155,13 @@ export async function telegramWebhook(ctx: Ctx): Promise<Response> {
 
   if (update.callback_query) {
     await handleDeviceDecision(ctx, update.callback_query);
+    return json({ ok: true });
+  }
+
+  if (update.channel_post) {
+    // Any post in a channel where the bot is admin also reveals the channel id.
+    const c = update.channel_post.chat;
+    await recordChannelMembership(ctx, { chat: c, from: { id: 0 }, new_chat_member: { status: 'administrator', user: { id: 0 }, can_post_messages: true } });
     return json({ ok: true });
   }
 
