@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="admin_app_name">إدارة الجمعية</string>
-    <string name="a_login_title">دخول المشرفين</string>
-    <string name="a_login_hint">هذا التطبيق مخصص لمشرفي الجمعية ومحرريها فقط. حسابات الأعضاء لا يمكنها الدخول.</string>
     <string name="a_hello">مرحباً، %1$s</string>
     <string name="a_overview">نظرة عامة</string>
     <string name="a_users">المستخدمون</string>
@@ -59,7 +57,6 @@
     <string name="a_cancel_reg">إلغاء</string>
     <string name="a_registered_n">المسجلون: %1$d</string>
     <string name="a_required">يرجى ملء الحقول المطلوبة</string>
-    <string name="a_logout_confirm">تسجيل الخروج من تطبيق الإدارة؟</string>
     <string name="st_draft">مسودة</string>
     <string name="st_published">منشور</string>
     <string name="st_archived">مؤرشف</string>
@@ -182,4 +179,25 @@
     <string name="e_volunteer_not_approved">يجب قبول المتطوع أولاً</string>
     <string name="e_ends_before_start">تاريخ النهاية قبل تاريخ البداية</string>
     <string name="e_invalid_url">الروابط يجب أن تبدأ بـ https://</string>
+    <string name="act_title">تفعيل تطبيق المشرفين</string>
+    <string name="act_hint">أدخل رمز التفعيل المكوّن من 8 أرقام الذي أرسله لك مسؤول الجمعية.</string>
+    <string name="act_button">تفعيل</string>
+    <string name="act_once">يُطلب الرمز مرة واحدة فقط على هذا الهاتف. بعدها يفتح التطبيق مباشرة.</string>
+    <string name="act_invalid">الرمز غير صحيح أو مستخدم أو منتهي الصلاحية. اطلب رمزاً جديداً.</string>
+    <string name="dev_title">الأجهزة ورموز التفعيل</string>
+    <string name="dev_intro">أنشئ رمزاً لكل مشرف وأرسله له. يُستعمل الرمز مرة واحدة خلال 48 ساعة لتفعيل هاتفه، وكل ما يفعله يُسجَّل باسمه.</string>
+    <string name="dev_new">مشرف جديد</string>
+    <string name="dev_name">اسم المشرف</string>
+    <string name="dev_generate">إنشاء رمز التفعيل</string>
+    <string name="dev_for_me">رمز لي (لتفعيل هاتف آخر لي)</string>
+    <string name="dev_active">الأجهزة المفعّلة</string>
+    <string name="dev_last_used">آخر استخدام: %1$s</string>
+    <string name="dev_revoke">إيقاف</string>
+    <string name="dev_revoke_confirm">إيقاف جهاز %1$s؟ سيتوقف التطبيق عنده فوراً.</string>
+    <string name="dev_code_for">رمز تفعيل: %1$s</string>
+    <string name="dev_code_note">صالح لمرة واحدة حتى %1$s. لن يظهر مرة أخرى، انسخه أو شاركه الآن.</string>
+    <string name="dev_share_text">رمز تفعيل تطبيق إدارة الجمعية: %1$s
+صالح لمرة واحدة خلال 48 ساعة. لا تشاركه مع أي شخص آخر.</string>
+    <string name="dev_disconnect">فصل هذا الجهاز</string>
+    <string name="dev_disconnect_confirm">فصل هذا الهاتف؟ ستحتاج رمز تفعيل جديداً لاستعماله مجدداً.</string>
 </resources>

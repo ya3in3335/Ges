@@ -14,6 +14,7 @@ import * as media from './routes/media';
 import * as settings from './routes/settings';
 import * as notifications from './routes/notifications';
 import * as admin from './routes/admin';
+import * as devices from './routes/devices';
 import { home } from './routes/home';
 import { flushChannelOutbox } from './services/channel';
 
@@ -36,6 +37,7 @@ export const router = new Router()
   .post('/api/auth/login', auth.login)
   .post('/api/auth/refresh', auth.refresh)
   .post('/api/auth/logout', auth.logout)
+  .post('/api/auth/activate', devices.activateDevice)
   .post('/api/auth/password/forgot', auth.forgotPassword)
   .post('/api/auth/password/reset', auth.resetPassword)
   .post('/api/auth/email/send', auth.sendEmailVerification)
@@ -67,6 +69,9 @@ export const router = new Router()
   .patch('/api/admin/users/:id', admin.updateUser)
   .post('/api/admin/users/:id/reset-verification', admin.resetVerification)
   .get('/api/admin/audit', admin.auditLog)
+  .post('/api/admin/activation-codes', devices.createActivationCode)
+  .get('/api/admin/devices', devices.listDevices)
+  .delete('/api/admin/devices/:id', devices.revokeDevice)
   .get('/api/admin/news', news.adminListNews)
   .post('/api/admin/news', news.adminCreateNews)
   .patch('/api/admin/news/:id', news.adminUpdateNews)

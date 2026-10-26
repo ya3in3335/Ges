@@ -33,6 +33,13 @@ import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Icon
+import dz.association.admin.ui.adminError
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -60,12 +67,10 @@ import dz.association.admin.data.AdminRoles
 import dz.association.admin.data.AdminSession
 import dz.association.admin.ui.ConfirmDialog
 import dz.association.admin.ui.ErrorText
-import dz.association.admin.ui.LtrStyle
 import dz.association.admin.ui.Module
 import dz.association.app.core.network.AppError
 import dz.association.app.core.network.Result
 import dz.association.app.core.network.apiCall
-import dz.association.app.ui.components.PasswordField
 import dz.association.app.ui.components.AppCard
 import dz.association.app.ui.components.LogoImage
 import dz.association.app.ui.components.PrimaryButton
@@ -75,35 +80,44 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginVm @Inject constructor(private val session: AdminSession) : ViewModel() {
+class ActivationVm @Inject constructor(private val session: AdminSession) : ViewModel() {
     val busy = MutableStateFlow(false)
     val error = MutableStateFlow<AppError?>(null)
-    fun login(id: String, pw: String) = viewModelScope.launch {
+    fun activate(code: String) = viewModelScope.launch {
         busy.value = true; error.value = null
-        val r = session.login(id, pw)
+        val r = session.activate(code)
         if (r is Result.Err) error.value = r.error
         busy.value = false
     }
 }
 
+/** First-launch screen: the supervisor types the 8-digit code once; no login afterwards. */
 @Composable
-fun LoginScreen(vm: LoginVm = hiltViewModel()) {
-    var id by rememberSaveable { mutableStateOf("") }
-    var pw by rememberSaveable { mutableStateOf("") }
+fun ActivationScreen(vm: ActivationVm = hiltViewModel()) {
+    var code by rememberSaveable { mutableStateOf("") }
     val busy by vm.busy.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
     Column(
         Modifier.fillMaxSize().statusBarsPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Spacer(Modifier.height(24.dp))
-        LogoImage(Modifier.height(120.dp))
-        Text(stringResource(R.string.a_login_title), style = MaterialTheme.typography.headlineSmall)
-        Text(stringResource(R.string.a_login_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        OutlinedTextField(id, { id = it }, label = { Text(stringResource(dz.association.app.core.R.string.identifier)) }, singleLine = true, textStyle = LtrStyle, modifier = Modifier.fillMaxWidth())
-        PasswordField(pw, { pw = it }, stringResource(dz.association.app.core.R.string.password))
-        ErrorText(error)
-        PrimaryButton(stringResource(dz.association.app.core.R.string.login), { vm.login(id, pw) }, enabled = id.isNotBlank() && pw.isNotBlank(), loading = busy)
+        Spacer(Modifier.height(32.dp))
+        LogoImage(Modifier.height(130.dp))
+        Text(stringResource(R.string.act_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.act_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        OutlinedTextField(
+            value = code,
+            onValueChange = { v -> code = v.filter(Char::isDigit).take(8) },
+            singleLine = true,
+            placeholder = { Text("• • • •  • • • •", Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+            textStyle = MaterialTheme.typography.headlineMedium.copy(textAlign = TextAlign.Center, letterSpacing = 6.sp, textDirection = TextDirection.Ltr),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        error?.let { Text(if ((it as? AppError.Api)?.code == "invalid_code") stringResource(R.string.act_invalid) else adminError(it), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center) }
+        PrimaryButton(stringResource(R.string.act_button), { vm.activate(code) }, enabled = code.length == 8, loading = busy)
+        Text(stringResource(R.string.act_once), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, textAlign = TextAlign.Center)
     }
 }
 
@@ -120,7 +134,7 @@ class HomeVm @Inject constructor(private val api: AdminApi, private val session:
         when (val r = apiCall { api.overview() }) { is Result.Ok -> { stats.value = r.value; error.value = null }; is Result.Err -> error.value = r.error }
         refreshing.value = false
     }
-    fun logout() = viewModelScope.launch { session.logout() }
+    fun disconnect() = viewModelScope.launch { session.disconnect() }
 }
 
 private val STATS = listOf(
@@ -137,6 +151,7 @@ private val TILES = listOf(
     Tile(Module.POLLS, R.string.a_polls, Icons.Outlined.HowToVote),
     Tile(Module.VOLUNTEERS, R.string.a_volunteers, Icons.Outlined.VolunteerActivism),
     Tile(Module.USERS, R.string.a_users, Icons.Outlined.Group),
+    Tile(Module.DEVICES, R.string.dev_title, Icons.Outlined.PhoneAndroid),
     Tile(Module.MEDIA, R.string.a_media, Icons.Outlined.PhotoLibrary),
     Tile(Module.NOTIFICATIONS, R.string.a_notifications, Icons.Outlined.Notifications),
     Tile(Module.DONATIONS, R.string.a_donations, Icons.Outlined.Savings),
@@ -162,7 +177,7 @@ fun HomeScreen(role: String, open: (Module) -> Unit, vm: HomeVm = hiltViewModel(
                         Text(stringResource(R.string.a_hello, user?.fullName?.substringBefore(' ').orEmpty()), style = MaterialTheme.typography.titleLarge)
                         Text(dz.association.app.ui.components.roleLabel(role), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { confirmLogout = true }) { Icon(Icons.AutoMirrored.Outlined.Logout, stringResource(dz.association.app.core.R.string.logout)) }
+                    IconButton(onClick = { confirmLogout = true }) { Icon(Icons.AutoMirrored.Outlined.Logout, stringResource(R.string.dev_disconnect)) }
                 }
             }
             item(span = { GridItemSpan(maxLineSpan) }) { Text(stringResource(R.string.a_overview), style = MaterialTheme.typography.titleMedium) }
@@ -191,6 +206,6 @@ fun HomeScreen(role: String, open: (Module) -> Unit, vm: HomeVm = hiltViewModel(
             }
         }
     }
-    if (confirmLogout) ConfirmDialog(stringResource(R.string.a_logout_confirm), { vm.logout() }, { confirmLogout = false })
+    if (confirmLogout) ConfirmDialog(stringResource(R.string.dev_disconnect_confirm), { vm.disconnect() }, { confirmLogout = false })
 }
 

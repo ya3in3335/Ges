@@ -11,7 +11,7 @@ export async function overview(ctx: Ctx): Promise<Response> {
   const day = ctx.now - 86_400_000;
   const week = ctx.now - 7 * 86_400_000;
   const r = await db.batch([
-    db.prepare(`SELECT COUNT(*) AS n FROM users WHERE status = 'active'`),
+    db.prepare(`SELECT COUNT(*) AS n FROM users WHERE status = 'active' AND is_staff_only = 0`),
     db.prepare(`SELECT COUNT(*) AS n FROM users WHERE status = 'active' AND phone_verified_at IS NOT NULL`),
     db.prepare(`SELECT COUNT(*) AS n FROM users WHERE status = 'active' AND created_at > ?`).bind(week),
     db.prepare(`SELECT COUNT(*) AS n FROM volunteers WHERE status = 'pending'`),

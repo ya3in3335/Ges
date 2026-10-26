@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="admin_app_name">Administration</string>
-    <string name="a_login_title">Connexion des responsables</string>
-    <string name="a_login_hint">Application réservée aux responsables et éditeurs. Les comptes membres ne peuvent pas s’y connecter.</string>
     <string name="a_hello">Bonjour, %1$s</string>
     <string name="a_overview">Vue d’ensemble</string>
     <string name="a_users">Utilisateurs</string>
@@ -59,7 +57,6 @@
     <string name="a_cancel_reg">Annuler</string>
     <string name="a_registered_n">Inscrits : %1$d</string>
     <string name="a_required">Veuillez remplir les champs obligatoires</string>
-    <string name="a_logout_confirm">Se déconnecter ?</string>
     <string name="st_draft">Brouillon</string>
     <string name="st_published">Publié</string>
     <string name="st_archived">Archivé</string>
@@ -182,4 +179,25 @@
     <string name="e_volunteer_not_approved">Acceptez d’abord le bénévole</string>
     <string name="e_ends_before_start">La fin précède le début</string>
     <string name="e_invalid_url">Les liens doivent commencer par https://</string>
+    <string name="act_title">Activation de l’application</string>
+    <string name="act_hint">Saisissez le code d’activation à 8 chiffres reçu du responsable.</string>
+    <string name="act_button">Activer</string>
+    <string name="act_once">Le code n’est demandé qu’une seule fois sur ce téléphone.</string>
+    <string name="act_invalid">Code invalide, déjà utilisé ou expiré. Demandez-en un nouveau.</string>
+    <string name="dev_title">Appareils et codes</string>
+    <string name="dev_intro">Créez un code par responsable. Il s’utilise une fois sous 48 h ; chaque action est enregistrée à son nom.</string>
+    <string name="dev_new">Nouveau responsable</string>
+    <string name="dev_name">Nom du responsable</string>
+    <string name="dev_generate">Générer le code</string>
+    <string name="dev_for_me">Un code pour moi (autre téléphone)</string>
+    <string name="dev_active">Appareils actifs</string>
+    <string name="dev_last_used">Dernière utilisation : %1$s</string>
+    <string name="dev_revoke">Révoquer</string>
+    <string name="dev_revoke_confirm">Révoquer l’appareil de %1$s ? L’accès s’arrête immédiatement.</string>
+    <string name="dev_code_for">Code d’activation : %1$s</string>
+    <string name="dev_code_note">Valable une fois jusqu’au %1$s. Il ne sera plus affiché.</string>
+    <string name="dev_share_text">Code d’activation de l’application : %1$s
+Valable une fois sous 48 h. Ne le partagez pas.</string>
+    <string name="dev_disconnect">Déconnecter cet appareil</string>
+    <string name="dev_disconnect_confirm">Déconnecter ce téléphone ? Un nouveau code sera nécessaire.</string>
 </resources>

@@ -15,7 +15,8 @@ import dz.association.admin.ui.screens.ActivitiesScreen
 import dz.association.admin.ui.screens.AuditScreen
 import dz.association.admin.ui.screens.DonationsScreen
 import dz.association.admin.ui.screens.HomeScreen
-import dz.association.admin.ui.screens.LoginScreen
+import dz.association.admin.ui.screens.ActivationScreen
+import dz.association.admin.ui.screens.DevicesScreen
 import dz.association.admin.ui.screens.MediaScreen
 import dz.association.admin.ui.screens.NewsScreen
 import dz.association.admin.ui.screens.NotificationsScreen
@@ -33,7 +34,7 @@ class RootVm @Inject constructor(session: AdminSession) : ViewModel() {
 
 /** Module routes and the minimum role that may open them (the server enforces the same rules). */
 enum class Module(val route: String, val minRole: String) {
-    USERS("users", "ADMIN"), TELEGRAM("telegram", "ADMIN"), NEWS("news", "EDITOR"), ACTIVITIES("activities", "EDITOR"),
+    USERS("users", "ADMIN"), DEVICES("devices", "ADMIN"), TELEGRAM("telegram", "ADMIN"), NEWS("news", "EDITOR"), ACTIVITIES("activities", "EDITOR"),
     POLLS("polls", "ADMIN"), VOLUNTEERS("volunteers", "ADMIN"), MEDIA("media", "EDITOR"), DONATIONS("donations", "ADMIN"),
     NOTIFICATIONS("notifications", "EDITOR"), SETTINGS("settings", "SUPER_ADMIN"), AUDIT("audit", "ADMIN"),
 }
@@ -42,7 +43,7 @@ enum class Module(val route: String, val minRole: String) {
 fun AdminNav(vm: RootVm = hiltViewModel()) {
     val user by vm.user.collectAsStateWithLifecycle()
     if (user == null || !AdminRoles.canUseApp(user?.role)) {
-        LoginScreen()
+        ActivationScreen()
         return
     }
     val nav = rememberNavController()
@@ -55,6 +56,7 @@ fun AdminNav(vm: RootVm = hiltViewModel()) {
                 if (!AdminRoles.atLeast(role, m.minRole)) { back(); return@composable }
                 when (m) {
                     Module.USERS -> UsersScreen(back, role)
+                    Module.DEVICES -> DevicesScreen(back, role)
                     Module.TELEGRAM -> TelegramScreen(back)
                     Module.NEWS -> NewsScreen(back, role)
                     Module.ACTIVITIES -> ActivitiesScreen(back)

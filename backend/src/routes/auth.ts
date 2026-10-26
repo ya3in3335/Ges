@@ -136,9 +136,9 @@ export async function refresh(ctx: Ctx): Promise<Response> {
   const { refreshToken } = await readJson(ctx.req, refreshSchema);
   const hash = await sha256Hex(refreshToken);
   const s = await ctx.env.DB.prepare(
-    `SELECT s.id, s.user_id, s.family_id, s.client, s.expires_at, s.rotated_at, s.revoked_at, u.role, u.status
+    `SELECT s.id, s.user_id, s.family_id, s.client, s.expires_at, s.rotated_at, s.revoked_at, s.long_lived, s.device_name, u.role, u.status
      FROM auth_sessions s JOIN users u ON u.id = s.user_id WHERE s.refresh_hash = ?`,
-  ).bind(hash).first<{ id: string; user_id: string; family_id: string; client: 'android' | 'admin'; expires_at: number; rotated_at: number | null; revoked_at: number | null; role: Role; status: string }>();
+  ).bind(hash).first<{ id: string; user_id: string; family_id: string; client: 'android' | 'admin'; expires_at: number; rotated_at: number | null; revoked_at: number | null; long_lived: number; device_name: string | null; role: Role; status: string }>();
   if (!s) throw unauthorized('invalid_refresh_token');
   if (s.rotated_at || s.revoked_at) {
     // Reuse of a rotated token → likely theft. Revoke the whole family.
@@ -146,7 +146,7 @@ export async function refresh(ctx: Ctx): Promise<Response> {
     throw unauthorized('refresh_token_reused');
   }
   if (s.expires_at <= ctx.now || s.status !== 'active') throw unauthorized('session_expired');
-  const { tokens, insert } = await issueTokens(ctx, { id: s.user_id, role: s.role }, s.client, s.family_id);
+  const { tokens, insert } = await issueTokens(ctx, { id: s.user_id, role: s.role }, s.client, s.family_id, { longLived: !!s.long_lived, deviceName: s.device_name });
   const results = await ctx.env.DB.batch([
     ctx.env.DB.prepare('UPDATE auth_sessions SET rotated_at = ? WHERE id = ? AND rotated_at IS NULL AND revoked_at IS NULL').bind(ctx.now, s.id),
     insert,

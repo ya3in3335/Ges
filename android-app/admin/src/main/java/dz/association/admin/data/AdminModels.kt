@@ -221,3 +221,18 @@ import kotlinx.serialization.Serializable
     @SerialName("created_at") val createdAt: Long,
 )
 @Serializable data class AuditPage(val items: List<AuditRow>, val hasMore: Boolean = false)
+
+// ── One-time device activation ──
+@Serializable data class ActivateRequest(val code: String, val deviceName: String? = null)
+@Serializable data class ActivationCodeRequest(val name: String? = null, val role: String? = null, val userId: String? = null)
+@Serializable data class ActivationCode(val code: String, val userId: String, val name: String, val role: String, val expiresAt: Long)
+@Serializable data class DeviceRow(
+    val id: String,
+    @SerialName("device_name") val deviceName: String? = null,
+    @SerialName("created_at") val createdAt: Long = 0,
+    @SerialName("last_used_at") val lastUsedAt: Long? = null,
+    @SerialName("user_id") val userId: String,
+    @SerialName("full_name") val fullName: String,
+    val role: String,
+)
+@Serializable data class DeviceList(val items: List<DeviceRow>)

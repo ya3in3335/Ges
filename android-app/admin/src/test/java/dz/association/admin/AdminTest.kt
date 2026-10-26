@@ -42,8 +42,8 @@ class AdminTest {
     @Before fun setUp() {
         server = MockWebServer().apply { start() }
         session = SessionManager(TokenStore(ApplicationProvider.getApplicationContext(), PlainCrypto()), json).also { it.clear() }
-        val api = Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(json.asConverterFactory("application/json".toMediaType())).build().create(ApiService::class.java)
-        admin = AdminSession(api, session)
+        val retrofit = Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(json.asConverterFactory("application/json".toMediaType())).build()
+        admin = AdminSession(retrofit.create(ApiService::class.java), retrofit.create(dz.association.admin.data.AdminApi::class.java), session)
     }
 
     @After fun tearDown() = server.shutdown()
@@ -62,32 +62,42 @@ class AdminTest {
         assertFalse(AdminRoles.atLeast("BOGUS", "USER"))
     }
 
-    @Test fun signsInAsAdminClient() = runTest {
-        server.enqueue(MockResponse().setBody(loginBody("ADMIN")))
-        val r = admin.login(" admin@b.dz ", "pw")
+    @Test fun activatesWithACodeAndNoPassword() = runTest {
+        server.enqueue(MockResponse().setResponseCode(201).setBody(loginBody("EDITOR")))
+        val r = admin.activate("1234 5678")
         assertTrue(r is Result.Ok)
-        val body = server.takeRequest().body.readUtf8()
-        assertTrue(body.contains("\"client\":\"admin\""))
-        assertTrue(body.contains("\"identifier\":\"admin@b.dz\""))
+        val req = server.takeRequest()
+        assertEquals("/api/auth/activate", req.path)
+        val body = req.body.readUtf8()
+        assertTrue(body.contains("\"code\":\"12345678\""))
+        assertFalse(body.contains("password"))
         assertEquals("R", session.refreshToken)
     }
 
     @Test fun refusesMemberAccountsAndStoresNothing() = runTest {
-        server.enqueue(MockResponse().setBody(loginBody("USER")))
-        val r = admin.login("user@b.dz", "pw")
-        assertEquals(Result.Err(AppError.Api(403, "insufficient_role")), r)
+        server.enqueue(MockResponse().setResponseCode(201).setBody(loginBody("USER")))
+        assertEquals(Result.Err(AppError.Api(403, "insufficient_role")), admin.activate("12345678"))
         assertNull(session.refreshToken)
         assertNull(session.user.value)
     }
 
-    @Test fun serverRefusalIsReported() = runTest {
-        server.enqueue(MockResponse().setResponseCode(403).setBody("""{"error":"insufficient_role"}"""))
-        assertEquals(Result.Err(AppError.Api(403, "insufficient_role")), admin.login("v@b.dz", "pw"))
+    @Test fun invalidCodeIsReported() = runTest {
+        server.enqueue(MockResponse().setResponseCode(400).setBody("""{"error":"invalid_code"}"""))
+        assertEquals(Result.Err(AppError.Api(400, "invalid_code")), admin.activate("00000000"))
+        assertNull(session.refreshToken)
+    }
+
+    @Test fun revokedDeviceIsForgotten() = runTest {
+        server.enqueue(MockResponse().setResponseCode(201).setBody(loginBody("EDITOR")))
+        admin.activate("12345678")
+        server.enqueue(MockResponse().setResponseCode(401).setBody("""{"error":"unauthorized"}"""))
+        admin.refresh()
+        assertNull(session.refreshToken)
     }
 
     @Test fun demotedAccountIsSignedOutOnRefresh() = runTest {
-        server.enqueue(MockResponse().setBody(loginBody("EDITOR")))
-        admin.login("e@b.dz", "pw")
+        server.enqueue(MockResponse().setResponseCode(201).setBody(loginBody("EDITOR")))
+        admin.activate("12345678")
         server.enqueue(MockResponse().setBody("""{"user":{"id":"u1","fullName":"Test User","email":"a@b.dz","phone":"+213550000001","role":"USER"}}"""))
         admin.refresh()
         assertNull(session.refreshToken)

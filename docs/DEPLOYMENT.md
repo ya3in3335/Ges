@@ -6,7 +6,7 @@ Prerequisites: a Cloudflare account, Node 22, `npx wrangler login` (or a `CLOUDF
 ```bash
 cd backend && npm ci
 npx wrangler d1 create association_db          # copy database_id into wrangler.toml
-npx wrangler d1 migrations apply association_db --remote
+CI=true npx wrangler d1 migrations apply association_db --remote
 # secrets (never commit them)
 openssl rand -hex 32 | npx wrangler secret put JWT_SECRET
 npx wrangler secret put TELEGRAM_BOT_TOKEN
@@ -27,8 +27,10 @@ Optional media storage: `npx wrangler r2 bucket create association-media`, uncom
 Follow `telegram-bot/README.md`, then run `telegram-bot/setup-webhook.sh`.
 
 ## 3. First administrator
-Register normally in the app (or `POST /api/auth/register`), then:
-`backend/scripts/promote-admin.sh you@example.org`
+Create the first super administrator and print its one-time activation code (valid 48 h):
+`backend/scripts/create-first-admin.sh "Name"` — type the code once in the supervisors' app.
+Further supervisors get their codes from the app (Devices & codes). To give an existing member
+account a staff role instead, use `backend/scripts/promote-admin.sh you@example.org`.
 
 ## 4. Admin dashboard (Cloudflare Pages)
 ```bash

@@ -13,7 +13,7 @@ Legend: ✅ done and verified here · 🧪 covered by automated tests · 🔑 wa
 | Backend REST API, D1 schema + migration, RBAC (5 roles), rate limiting, audit logs | ✅ 🧪 |
 | Telegram phone verification + private channel notifications with retry outbox | ✅ 🧪 and smoke-tested on the real Workers runtime (`wrangler dev` + local D1) |
 | Voting: eligibility (verified / approved member list), anonymous ballots, one vote per account, immutable ballots, result visibility rules | ✅ 🧪 |
-| Supervisors' Android app (separate APK): overview, users, Telegram stats, news, activities + participants, polls (members, results), volunteers, media (links + phone upload), donations, notifications, settings, audit | ✅ compiles, lint clean, debug + minified release build · 🧪 7 tests (role gate, member accounts refused, no admin code in the members' app) |
+| Supervisors' Android app (separate APK, **no login**: one-time 8-digit activation code per device, long-lived revocable device session, codes issued and devices revoked from the app): overview, users, Telegram stats, news, activities + participants, polls (members, results), volunteers, media (links + phone upload), donations, notifications, settings, audit | ✅ compiles, lint clean, debug + minified release build · 🧪 7 tests (role gate, member accounts refused, no admin code in the members' app) |
 | Web admin dashboard (optional, same modules) | ✅ 🧪 and exercised end-to-end in Chromium against the local Worker |
 | Push notifications (FCM HTTP v1 from the Worker; topic subscriptions in the app) | ✅ code complete · 🔑 needs Firebase project |
 | Download website (AR/FR, install guide, privacy policy draft, version/APK/SHA-256 from API) | ✅ rendered and checked in Chromium |

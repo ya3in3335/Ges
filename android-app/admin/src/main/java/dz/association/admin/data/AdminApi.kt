@@ -78,6 +78,11 @@ interface AdminApi {
     @GET("api/admin/notifications") suspend fun notifications(): NotificationLog
     @POST("api/admin/notifications") suspend fun sendNotification(@Body b: SendNotification): SendResult
 
+    @POST("api/auth/activate") suspend fun activate(@Body b: ActivateRequest): dz.association.app.core.network.AuthResponse
+    @POST("api/admin/activation-codes") suspend fun createActivationCode(@Body b: ActivationCodeRequest): ActivationCode
+    @GET("api/admin/devices") suspend fun devices(): DeviceList
+    @DELETE("api/admin/devices/{id}") suspend fun revokeDevice(@Path("id") id: String): OkResponse
+
     @GET("api/admin/audit") suspend fun audit(@Query("source") source: String, @Query("page") page: Int, @Query("pageSize") pageSize: Int = 50): AuditPage
 }
 
