@@ -51,6 +51,8 @@ import dz.association.admin.ui.ErrorText
 import dz.association.admin.ui.Field
 import dz.association.admin.ui.ListVm
 import dz.association.admin.ui.PagedList
+import dz.association.admin.ui.ProblemsText
+import dz.association.admin.ui.scheduleProblems
 import dz.association.admin.ui.Tag
 import dz.association.admin.ui.blankToNull
 import dz.association.admin.ui.statusLabel
@@ -150,7 +152,7 @@ private fun NewsEditor(n: AdminNews?, vm: NewsVm, close: () -> Unit) {
     val busy by vm.busy.collectAsStateWithLifecycle()
     val err by vm.actionError.collectAsStateWithLifecycle()
     EditorDialog(stringResource(if (n == null) R.string.a_add else R.string.a_edit), close) {
-        Field(titleAr, { titleAr = it }, stringResource(R.string.a_title_ar), isError = tried && titleAr.isBlank())
+        Field(titleAr, { titleAr = it }, stringResource(R.string.a_title_ar), isError = tried && titleAr.trim().length < 3)
         Field(titleFr, { titleFr = it }, stringResource(R.string.a_title_fr), ltr = true)
         Field(bodyAr, { bodyAr = it }, stringResource(R.string.a_body_ar), lines = 6, isError = tried && bodyAr.isBlank())
         Field(bodyFr, { bodyFr = it }, stringResource(R.string.a_body_fr), lines = 4, ltr = true)
@@ -160,7 +162,11 @@ private fun NewsEditor(n: AdminNews?, vm: NewsVm, close: () -> Unit) {
         if (image.startsWith("https://")) RemoteImage(image, null, Modifier.fillMaxWidth(0.6f).androidAspect())
         CheckRow(stringResource(R.string.a_featured), featured) { featured = it }
         CheckRow(stringResource(R.string.a_notify), notify) { notify = it }
-        if (tried && (titleAr.isBlank() || bodyAr.isBlank())) Text(stringResource(R.string.a_required), color = MaterialTheme.colorScheme.error)
+        if (tried) ProblemsText(listOfNotNull(
+            if (titleAr.trim().length < 3) stringResource(R.string.a_problem_title) else null,
+            if (bodyAr.isBlank()) stringResource(R.string.a_problem_body) else null,
+            if (!validUrl(image)) stringResource(R.string.a_problem_link) else null,
+        ))
         ErrorText(err)
         PrimaryButton(stringResource(dz.association.app.core.R.string.save), {
             tried = true
@@ -270,14 +276,18 @@ private fun ActivityEditor(a: AdminActivity?, vm: ActivitiesVm, close: () -> Uni
     var tried by rememberSaveable { mutableStateOf(false) }
     val busy by vm.busy.collectAsStateWithLifecycle()
     val err by vm.actionError.collectAsStateWithLifecycle()
-    val valid = titleAr.trim().length >= 3 && descAr.isNotBlank() && starts > 0 && ends >= starts && validUrl(image) && validUrl(video)
+    val problems = scheduleProblems(titleAr, starts, ends) + listOfNotNull(
+        if (descAr.isBlank()) stringResource(R.string.a_problem_description) else null,
+        if (!validUrl(image) || !validUrl(video)) stringResource(R.string.a_problem_link) else null,
+    )
+    val valid = problems.isEmpty()
     EditorDialog(stringResource(if (a == null) R.string.a_add else R.string.a_edit), close) {
-        Field(titleAr, { titleAr = it }, stringResource(R.string.a_title_ar), isError = tried && titleAr.isBlank())
+        Field(titleAr, { titleAr = it }, stringResource(R.string.a_title_ar), isError = tried && titleAr.trim().length < 3)
         Field(titleFr, { titleFr = it }, stringResource(R.string.a_title_fr), ltr = true)
         Field(descAr, { descAr = it }, stringResource(R.string.a_desc_ar) + " *", lines = 5, isError = tried && descAr.isBlank())
         Field(descFr, { descFr = it }, stringResource(R.string.a_desc_fr), lines = 3, ltr = true)
-        DateTimeField(stringResource(R.string.a_starts), starts) { starts = it; if (ends < it) ends = it + 2 * 3600_000 }
-        DateTimeField(stringResource(R.string.a_ends), ends) { ends = it }
+        DateTimeField(stringResource(R.string.a_starts), starts, isError = tried && starts <= 0) { starts = it; if (ends <= it) ends = it + 2 * 3600_000 }
+        DateTimeField(stringResource(R.string.a_ends), ends, isError = tried && ends <= starts) { ends = if (starts > 0 && it <= starts) starts + 2 * 3600_000 else it }
         Field(location, { location = it }, stringResource(R.string.a_location))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(1f)) { Field(lat, { lat = it }, stringResource(R.string.a_latitude), ltr = true, keyboard = KeyboardType.Decimal) }
@@ -291,7 +301,7 @@ private fun ActivityEditor(a: AdminActivity?, vm: ActivitiesVm, close: () -> Uni
         CheckRow(stringResource(R.string.a_featured), featured) { featured = it }
         CheckRow(stringResource(R.string.a_registration_open), regOpen) { regOpen = it }
         if (a == null) CheckRow(stringResource(R.string.a_notify), notify) { notify = it }
-        if (tried && !valid) Text(stringResource(R.string.a_required), color = MaterialTheme.colorScheme.error)
+        if (tried) ProblemsText(problems)
         ErrorText(err)
         PrimaryButton(stringResource(dz.association.app.core.R.string.save), {
             tried = true

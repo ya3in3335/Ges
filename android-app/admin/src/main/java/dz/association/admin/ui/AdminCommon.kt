@@ -127,11 +127,14 @@ private val ALGIERS = TimeZone.getTimeZone("Africa/Algiers")
 
 /** Date + time picker in Algiers time; value is epoch milliseconds (0 = not set). */
 @Composable
-fun DateTimeField(label: String, value: Long, enabled: Boolean = true, onChange: (Long) -> Unit) {
+fun DateTimeField(label: String, value: Long, enabled: Boolean = true, isError: Boolean = false, onChange: (Long) -> Unit) {
     var step by remember { mutableIntStateOf(0) } // 0 closed, 1 date, 2 time
     var pickedDateUtc by remember { mutableStateOf(0L) }
-    OutlinedButton(onClick = { step = 1 }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-        Text("$label: " + if (value > 0) formatDateTime(value) else stringResource(R.string.a_pick))
+    OutlinedButton(
+        onClick = { step = 1 }, enabled = enabled, modifier = Modifier.fillMaxWidth(),
+        border = if (isError) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.error) else androidx.compose.material3.ButtonDefaults.outlinedButtonBorder(enabled),
+    ) {
+        Text("$label: " + if (value > 0) formatDateTime(value) else stringResource(R.string.a_pick), color = if (isError) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified)
     }
     if (step == 1) {
         val state = rememberDatePickerState(initialSelectedDateMillis = if (value > 0) value else System.currentTimeMillis())
@@ -160,6 +163,21 @@ fun DateTimeField(label: String, value: Long, enabled: Boolean = true, onChange:
             dismissButton = { TextButton(onClick = { step = 0 }) { Text(stringResource(android.R.string.cancel)) } },
         )
     }
+}
+
+/** Names exactly what still has to be fixed, instead of a generic "fill the required fields". */
+@Composable
+fun ProblemsText(problems: List<String>) {
+    if (problems.isNotEmpty()) Text(stringResource(R.string.a_fix_fields, problems.joinToString("، ")), color = MaterialTheme.colorScheme.error)
+}
+
+/** Shared checks for schedule-based editors; returns the labels of the problems. */
+@Composable
+fun scheduleProblems(title: String, starts: Long, ends: Long): List<String> = buildList {
+    if (title.trim().length < 3) add(stringResource(R.string.a_problem_title))
+    if (starts <= 0) add(stringResource(R.string.a_problem_start))
+    if (ends <= 0) add(stringResource(R.string.a_problem_end))
+    else if (starts > 0 && ends <= starts) add(stringResource(R.string.a_problem_end_order))
 }
 
 @Composable

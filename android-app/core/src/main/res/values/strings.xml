@@ -282,4 +282,5 @@
     <string name="lec_kind">النوع</string>
     <string name="lec_speaker_label">المحاضِر / المؤطِّر</string>
     <string name="menu_lectures">المحاضرات</string>
+    <string name="lec_fill_these">يرجى إكمال أو تصحيح: %1$s</string>
 </resources>

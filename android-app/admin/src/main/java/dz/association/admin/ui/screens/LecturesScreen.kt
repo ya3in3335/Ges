@@ -51,6 +51,8 @@ import dz.association.admin.ui.ErrorText
 import dz.association.admin.ui.Field
 import dz.association.admin.ui.ListVm
 import dz.association.admin.ui.PagedList
+import dz.association.admin.ui.ProblemsText
+import dz.association.admin.ui.scheduleProblems
 import dz.association.admin.ui.Tag
 import dz.association.admin.ui.blankToNull
 import dz.association.admin.ui.statusLabel
@@ -191,22 +193,23 @@ private fun LectureEditor(l: Lecture?, vm: LecturesVm, canDelete: Boolean, close
     val busy by vm.busy.collectAsStateWithLifecycle()
     val err by vm.actionError.collectAsStateWithLifecycle()
     val onlineOk = online.isBlank() || online.trim().startsWith("https://")
-    val valid = titleAr.trim().length >= 3 && starts > 0 && ends > starts && onlineOk
+    val problems = scheduleProblems(titleAr, starts, ends) + listOfNotNull(if (!onlineOk) stringResource(R.string.a_problem_link) else null)
+    val valid = problems.isEmpty()
     EditorDialog(stringResource(if (l == null) R.string.a_add else R.string.a_edit), close) {
         Choice(stringResource(CoreR.string.lec_kind), kind, LectureLabels.kinds.map { it to LectureLabels.kind(it) }) { kind = it }
-        Field(titleAr, { titleAr = it }, stringResource(R.string.a_title_ar), isError = tried && titleAr.trim().length < 3)
+        Field(titleAr, { titleAr = it }, stringResource(R.string.a_title_ar), isError = tried && titleAr.trim().length < 3, )
         Field(titleFr, { titleFr = it }, stringResource(R.string.a_title_fr), ltr = true)
         Field(speaker, { speaker = it }, stringResource(CoreR.string.lec_speaker_label))
         Field(descAr, { descAr = it }, stringResource(R.string.a_desc_ar), lines = 4)
-        DateTimeField(stringResource(R.string.a_starts), starts) { starts = it; if (ends <= it) ends = it + 2 * 3600_000 }
-        DateTimeField(stringResource(R.string.a_ends), ends) { ends = it }
+        DateTimeField(stringResource(R.string.a_starts), starts, isError = tried && starts <= 0) { starts = it; if (ends <= it) ends = it + 2 * 3600_000 }
+        DateTimeField(stringResource(R.string.a_ends), ends, isError = tried && ends <= starts) { ends = if (starts > 0 && it <= starts) starts + 2 * 3600_000 else it }
         Field(location, { location = it }, stringResource(R.string.a_location))
         Field(online, { online = it }, "https:// (Meet / Zoom)", ltr = true, keyboard = KeyboardType.Uri, isError = !onlineOk)
         Field(capacity, { capacity = it.filter(Char::isDigit) }, stringResource(R.string.a_capacity), keyboard = KeyboardType.Number)
         Choice(stringResource(R.string.a_status), status, listOf("draft", "published", "cancelled").map { it to statusLabel(it) }) { status = it }
         CheckRow(stringResource(R.string.a_registration_open), regOpen) { regOpen = it }
         if (l == null || l.status != "published") CheckRow(stringResource(R.string.a_notify), notify) { notify = it }
-        if (tried && !valid) Text(stringResource(R.string.a_required), color = MaterialTheme.colorScheme.error)
+        if (tried) ProblemsText(problems)
         ErrorText(err)
         PrimaryButton(stringResource(CoreR.string.save), {
             tried = true

@@ -212,4 +212,13 @@
     <string name="req_have_code">لدي رمز تفعيل</string>
     <string name="req_use_bot">الرجوع إلى طلب التفعيل</string>
     <string name="req_not_configured">التفعيل عبر تيليغرام غير مهيأ بعد. استعمل رمز التفعيل.</string>
+    <string name="a_fix_fields">يرجى تصحيح: %1$s</string>
+    <string name="a_problem_title">العنوان (3 أحرف على الأقل)</string>
+    <string name="a_problem_start">تاريخ ووقت البداية</string>
+    <string name="a_problem_end">تاريخ ووقت النهاية</string>
+    <string name="a_problem_end_order">النهاية يجب أن تكون بعد البداية</string>
+    <string name="a_problem_description">الوصف بالعربية</string>
+    <string name="a_problem_body">نص الخبر بالعربية</string>
+    <string name="a_problem_link">الروابط يجب أن تبدأ بـ https://</string>
+    <string name="a_problem_options">خياران على الأقل</string>
 </resources>

@@ -212,4 +212,13 @@ Valable une fois sous 48 h. Ne le partagez pas.</string>
     <string name="req_have_code">J’ai un code d’activation</string>
     <string name="req_use_bot">Revenir à la demande d’activation</string>
     <string name="req_not_configured">La validation Telegram n’est pas configurée. Utilisez un code.</string>
+    <string name="a_fix_fields">Veuillez corriger : %1$s</string>
+    <string name="a_problem_title">titre (3 caractères minimum)</string>
+    <string name="a_problem_start">date et heure de début</string>
+    <string name="a_problem_end">date et heure de fin</string>
+    <string name="a_problem_end_order">la fin doit être après le début</string>
+    <string name="a_problem_description">description en arabe</string>
+    <string name="a_problem_body">texte en arabe</string>
+    <string name="a_problem_link">les liens doivent commencer par https://</string>
+    <string name="a_problem_options">au moins deux options</string>
 </resources>

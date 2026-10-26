@@ -366,7 +366,16 @@ private fun LectureForm(data: LectureProfileResponse, vm: LectureFormViewModel, 
 
         OutlinedTextField(note, { note = it.take(500) }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.lec_note)) }, minLines = 2)
         Text(stringResource(R.string.lec_privacy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (missing.isNotEmpty()) Text(stringResource(R.string.lec_fill_required), color = MaterialTheme.colorScheme.error)
+        if (missing.isNotEmpty()) {
+            val labels = mapOf(
+                "firstName" to stringResource(R.string.lec_first_name), "lastName" to stringResource(R.string.lec_last_name),
+                "gender" to stringResource(R.string.lec_gender), "birthYear" to stringResource(R.string.lec_birth_year),
+                "wilaya" to stringResource(R.string.lec_wilaya), "maritalStatus" to stringResource(R.string.lec_marital),
+                "childrenCount" to stringResource(R.string.lec_children), "occupation" to stringResource(R.string.lec_occupation),
+                "occupationDetail" to LectureLabels.detailLabel(occupation),
+            )
+            Text(stringResource(R.string.lec_fill_these, missing.mapNotNull { labels[it] }.joinToString("، ")), color = MaterialTheme.colorScheme.error)
+        }
         error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
         PrimaryButton(stringResource(R.string.lec_submit), {
             tried = true

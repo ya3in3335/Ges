@@ -70,6 +70,8 @@ import dz.association.admin.ui.ErrorText
 import dz.association.admin.ui.Field
 import dz.association.admin.ui.ListVm
 import dz.association.admin.ui.PagedList
+import dz.association.admin.ui.ProblemsText
+import dz.association.admin.ui.scheduleProblems
 import dz.association.admin.ui.Tag
 import dz.association.admin.ui.blankToNull
 import dz.association.admin.ui.statusLabel
@@ -226,14 +228,20 @@ private fun PollEditor(initial: PollDraft, vm: PollsVm) {
     var tried by remember { mutableStateOf(false) }
     val busy by vm.busy.collectAsStateWithLifecycle()
     val err by vm.actionError.collectAsStateWithLifecycle()
-    val valid = d.titleAr.trim().length >= 3 && d.startsAt > 0 && d.endsAt > d.startsAt && opts.count { it.isNotBlank() } >= 2
+    val problems = scheduleProblems(d.titleAr, d.startsAt, d.endsAt) +
+        listOfNotNull(if (opts.count { it.isNotBlank() } < 2) stringResource(R.string.a_problem_options) else null)
+    val valid = problems.isEmpty()
     EditorDialog(stringResource(if (d.id == null) R.string.a_add else R.string.a_edit), { vm.draft.value = null }) {
         if (d.locked) Text(stringResource(R.string.p_locked), color = MaterialTheme.colorScheme.tertiary)
-        Field(d.titleAr, { d = d.copy(titleAr = it) }, stringResource(R.string.a_title_ar), isError = tried && d.titleAr.isBlank())
+        Field(d.titleAr, { d = d.copy(titleAr = it) }, stringResource(R.string.a_title_ar), isError = tried && d.titleAr.trim().length < 3)
         Field(d.titleFr, { d = d.copy(titleFr = it) }, stringResource(R.string.a_title_fr), ltr = true)
         Field(d.descriptionAr, { d = d.copy(descriptionAr = it) }, stringResource(R.string.a_desc_ar), lines = 3)
-        DateTimeField(stringResource(R.string.a_starts), d.startsAt, enabled = !d.locked) { d = d.copy(startsAt = it) }
-        DateTimeField(stringResource(R.string.a_ends), d.endsAt) { d = d.copy(endsAt = it) }
+        DateTimeField(stringResource(R.string.a_starts), d.startsAt, enabled = !d.locked, isError = tried && d.startsAt <= 0) {
+            d = d.copy(startsAt = it, endsAt = if (d.endsAt <= it) it + 24 * 3600_000 else d.endsAt)
+        }
+        DateTimeField(stringResource(R.string.a_ends), d.endsAt, isError = tried && d.endsAt <= d.startsAt) {
+            d = d.copy(endsAt = if (d.startsAt > 0 && it <= d.startsAt) d.startsAt + 24 * 3600_000 else it)
+        }
         Choice(stringResource(R.string.p_eligibility), d.eligibility, listOf("verified" to stringResource(R.string.p_elig_verified), "members" to stringResource(R.string.p_elig_members)), enabled = !d.locked) { d = d.copy(eligibility = it) }
         Choice(stringResource(R.string.p_visibility), d.resultVisibility, listOf("live", "after_close", "admins").map { it to visLabel(it) }, enabled = !d.locked) { d = d.copy(resultVisibility = it) }
         Choice(stringResource(R.string.a_status), d.status, listOf("draft", "published", "cancelled").map { it to statusLabel(it) }) { d = d.copy(status = it) }
@@ -246,7 +254,7 @@ private fun PollEditor(initial: PollDraft, vm: PollsVm) {
             }
         }
         if (!d.locked) TextButton(onClick = { opts.add("") }) { Text(stringResource(R.string.p_add_option)) }
-        if (tried && !valid) Text(stringResource(R.string.a_required), color = MaterialTheme.colorScheme.error)
+        if (tried) ProblemsText(problems)
         ErrorText(err)
         PrimaryButton(stringResource(dz.association.app.core.R.string.save), { tried = true; if (valid) vm.save(d.copy(options = opts.toList())) }, loading = busy)
     }
