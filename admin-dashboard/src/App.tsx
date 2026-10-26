@@ -3,6 +3,10 @@ import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { api, atLeast, type AdminUser, type Role } from './lib/api';
 import { ROLE_LABELS } from './lib/format';
 import Login from './pages/Login';
+import Activate from './pages/Activate';
+import Lectures from './pages/Lectures';
+import Devices from './pages/Devices';
+import { desktop } from './lib/desktop';
 import Overview from './pages/Overview';
 import Users from './pages/Users';
 import TelegramStats from './pages/TelegramStats';
@@ -23,8 +27,10 @@ export const useAuth = () => useContext(AuthCtx);
 const NAV: { to: string; label: string; min: Role }[] = [
   { to: '/', label: 'نظرة عامة', min: 'EDITOR' },
   { to: '/users', label: 'المستخدمون', min: 'ADMIN' },
+  { to: '/devices', label: 'الأجهزة المفعّلة', min: 'ADMIN' },
   { to: '/telegram', label: 'إحصاءات التحقق', min: 'ADMIN' },
   { to: '/news', label: 'الأخبار', min: 'EDITOR' },
+  { to: '/lectures', label: 'المحاضرات والاجتماعات', min: 'EDITOR' },
   { to: '/activities', label: 'النشاطات', min: 'EDITOR' },
   { to: '/polls', label: 'التصويت', min: 'ADMIN' },
   { to: '/volunteers', label: 'المتطوعون', min: 'ADMIN' },
@@ -50,7 +56,7 @@ export default function App() {
   }, []);
 
   if (checking) return <div className="state"><div className="spinner" /></div>;
-  if (!user) return <Login onLogin={setUser} />;
+  if (!user) return desktop ? <Activate onActivated={setUser} /> : <Login onLogin={setUser} />;
 
   const allowed = (min: Role) => atLeast(user.role, min);
   const guard = (min: Role, el: JSX.Element) => (allowed(min) ? el : <Navigate to="/" replace />);
@@ -66,7 +72,10 @@ export default function App() {
           <div className="me">
             <strong>{user.fullName}</strong>
             <small>{ROLE_LABELS[user.role]}</small>
-            <button className="btn ghost" onClick={async () => { await api.logout(); setUser(null); }}>تسجيل الخروج</button>
+            {desktop
+              ? <button className="btn ghost" onClick={async () => { if (confirm('إلغاء تفعيل هذا الحاسوب؟ ستحتاج إلى تفعيله من جديد.')) { await api.logout(); setUser(null); } }}>إلغاء تفعيل هذا الجهاز</button>
+              : <button className="btn ghost" onClick={async () => { await api.logout(); setUser(null); }}>تسجيل الخروج</button>}
+            {desktop && <small className="muted" dir="ltr">v{desktop.version}</small>}
           </div>
         </aside>
         <main>
@@ -77,6 +86,8 @@ export default function App() {
             <Route path="/telegram" element={guard('ADMIN', <TelegramStats />)} />
             <Route path="/news" element={<News />} />
             <Route path="/activities" element={<Activities />} />
+            <Route path="/lectures" element={<Lectures />} />
+            <Route path="/devices" element={guard('ADMIN', <Devices />)} />
             <Route path="/polls" element={guard('ADMIN', <Polls />)} />
             <Route path="/volunteers" element={guard('ADMIN', <Volunteers />)} />
             <Route path="/media" element={<Media />} />

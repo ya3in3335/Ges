@@ -1,0 +1,60 @@
+{
+  "name": "association-admin-desktop",
+  "productName": "Association Admin",
+  "description": "تطبيق إدارة الجمعية لويندوز",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/main.js",
+  "author": "Association",
+  "scripts": {
+    "web": "node scripts/build-web.mjs",
+    "start": "npm run web && electron .",
+    "test": "node --test test/net.test.js",
+    "dist": "npm run web && electron-builder --win nsis --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.3.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "dz.association.admin.desktop",
+    "productName": "Association Admin",
+    "copyright": "Association",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**",
+      "web/**",
+      "config.json",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": true,
+      "artifactName": "association-admin-setup-${version}.${ext}",
+      "publisherName": "Association"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "إدارة الجمعية",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "unicode": true
+    },
+    "publish": null
+  }
+}

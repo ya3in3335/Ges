@@ -1,4 +1,5 @@
-// API client for the admin dashboard.
+// API client for the admin dashboard (browser) and the Windows admin app.
+import { desktop, desktopFetch, desktopStore } from './desktop';
 // The access token is kept in memory only; the (short-lived, admin) refresh token in sessionStorage,
 // so closing the tab ends the session.
 
@@ -37,6 +38,27 @@ export class ApiClient {
     const r = await this.raw('POST', '/api/auth/login', { identifier, password, client: 'admin' }, false);
     this.setTokens(r.tokens);
     return r.user;
+  }
+
+  /** Desktop activation with a one-time 8-digit code issued by a supervisor. */
+  async activate(code: string, deviceName: string): Promise<AdminUser> {
+    const r = await this.raw('POST', '/api/auth/activate', { code, deviceName }, false);
+    this.setTokens(r.tokens);
+    return r.user;
+  }
+
+  /** Asks the association's approver (Telegram bot) to activate this computer. */
+  async requestActivation(name: string, deviceName: string): Promise<{ requestId: string; secret: string }> {
+    return this.raw('POST', '/api/auth/device-requests', { name, deviceName }, false);
+  }
+
+  /** Polls an activation request; stores the session once approved. */
+  async pollActivation(id: string, secret: string): Promise<{ status: string; user?: AdminUser }> {
+    const res = await this.f(`${this.base}/api/auth/device-requests/${encodeURIComponent(id)}`, { headers: { 'x-request-secret': secret } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError(res.status, data?.error ?? `http_${res.status}`);
+    if (data.status === 'approved' && data.tokens) this.setTokens(data.tokens);
+    return data;
   }
 
   async logout() {
@@ -97,8 +119,12 @@ export class ApiClient {
   del = <T = any>(p: string) => this.req<T>('DELETE', p);
 }
 
-const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? '';
-export const api = new ApiClient(BASE, typeof sessionStorage !== 'undefined' ? sessionStorage : new Map() as never);
+const BASE = (desktop?.apiBase ?? (import.meta.env.VITE_API_BASE_URL as string | undefined))?.replace(/\/$/, '') ?? '';
+// Windows app: requests and the (encrypted, long-lived) device session live in the main process.
+// Browser: refresh token in sessionStorage, so closing the tab ends the session.
+export const api = desktop
+  ? new ApiClient(BASE, desktopStore, desktopFetch)
+  : new ApiClient(BASE, typeof sessionStorage !== 'undefined' ? sessionStorage : new Map() as never);
 export const mediaUrl = (u: string | null | undefined) => (!u ? '' : u.startsWith('/') ? BASE + u : u);
 
 const ERRORS: Record<string, string> = {
@@ -120,5 +146,8 @@ const ERRORS: Record<string, string> = {
   invalid_rib: 'رقم RIB غير صالح',
   volunteer_not_approved: 'يجب قبول المتطوع أولاً',
   ends_before_start: 'تاريخ النهاية قبل تاريخ البداية',
+  invalid_code: 'رمز التفعيل غير صحيح أو منتهي الصلاحية',
+  invalid_name: 'الاسم يحتوي على رموز غير مسموحة',
+  not_found: 'العنصر غير موجود',
 };
 export const errorText = (e: unknown) => (e instanceof ApiError ? ERRORS[e.code] ?? `خطأ: ${e.code}` : 'تعذّر الاتصال بالخادم');

@@ -44,8 +44,8 @@ export default function Users() {
           <tbody>{data.items.map((u) => (
             <tr key={u.id}>
               <td>{u.full_name}</td>
-              <td dir="ltr">{u.email}</td>
-              <td dir="ltr">{u.phone_e164}</td>
+              <td><bdi dir="ltr">{u.email}</bdi></td>
+              <td><bdi dir="ltr">{u.phone_e164}</bdi></td>
               <td>{u.phone_verified_at ? <Badge tone="ok">مؤكد{u.telegram_linked ? ' · تيليغرام' : ''}</Badge> : <Badge>غير مؤكد</Badge>}</td>
               <td>
                 <select value={u.role} disabled={u.id === me?.id} onChange={(e) => act(() => api.patch(`/api/admin/users/${u.id}`, { role: e.target.value }))}>

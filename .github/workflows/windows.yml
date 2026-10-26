@@ -1,0 +1,28 @@
+name: Windows admin app
+
+on:
+  push:
+    paths: ['windows-admin/**', 'admin-dashboard/**', '.github/workflows/windows.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Dashboard tests
+        working-directory: admin-dashboard
+        run: npm ci && npx tsc -b && npx vitest run
+      - name: Desktop tests and installer
+        working-directory: windows-admin
+        run: npm ci && npm test && npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: association-admin-windows
+          path: windows-admin/dist/*.exe

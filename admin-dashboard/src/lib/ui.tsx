@@ -41,10 +41,10 @@ export function Pager({ page, hasMore, onPage }: { page: number; hasMore: boolea
   );
 }
 
-export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div className={wide ? 'modal wide' : 'modal'} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <header><h2>{title}</h2><button className="btn ghost" onClick={onClose} aria-label="إغلاق">✕</button></header>
         {children}
       </div>

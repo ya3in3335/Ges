@@ -92,7 +92,7 @@ export default function Activities() {
       {people && <Modal title={`المشاركون — ${people.activity.titleAr}`} onClose={() => setPeople(null)}>
         {people.items.length === 0 ? <State empty /> : <div className="table-wrap"><table>
           <thead><tr><th>الاسم</th><th>الهاتف</th><th>الحالة</th><th /></tr></thead>
-          <tbody>{people.items.map((p) => <tr key={p.user_id}><td>{p.full_name}</td><td dir="ltr">{p.phone_e164}</td><td>{p.status}</td>
+          <tbody>{people.items.map((p) => <tr key={p.user_id}><td>{p.full_name}</td><td><bdi dir="ltr">{p.phone_e164}</bdi></td><td>{p.status}</td>
             <td className="row-actions"><button className="btn ghost" onClick={() => setPart(p.user_id, 'attended')}>حضر</button><button className="btn ghost" onClick={() => setPart(p.user_id, 'cancelled')}>إلغاء</button></td></tr>)}</tbody>
         </table></div>}
       </Modal>}

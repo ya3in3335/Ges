@@ -89,3 +89,19 @@ yes | npx wrangler d1 migrations apply association_db --local
 npx wrangler dev --local --var JWT_SECRET:<32+ chars> --var TELEGRAM_WEBHOOK_SECRET:<secret> --var TELEGRAM_APPROVER_IDS:777000 &
 BASE=http://127.0.0.1:8787 WEBHOOK_SECRET=<secret> APPROVER=777000 node scripts/e2e.mjs
 ```
+
+## Windows admin app
+
+`windows-admin/` packages the admin dashboard (`admin-dashboard/`) as a Windows desktop app (Electron).
+It has no password: a computer is activated like the Android supervisors' app, either by a request the
+approver accepts in the Telegram bot, or with a one-time 8-digit code created by an ADMIN / SUPER_ADMIN in
+**Devices**. The device session is encrypted with the Windows key store (DPAPI) and can be revoked from
+**Devices**. The page has no network or Node access; the main process performs every request, only to the
+addresses in `windows-admin/config.json` (with automatic fallback).
+
+```bash
+cd windows-admin && npm ci && npm test
+npm run dist        # → dist/association-admin-setup-<version>.exe (needs Windows, or Linux with wine + wine32)
+```
+The GitHub workflow `windows.yml` builds the installer on a Windows runner. The installer is not
+code-signed, so Windows SmartScreen shows a warning on first run ("More info" → "Run anyway").

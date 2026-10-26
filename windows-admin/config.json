@@ -1,0 +1,4 @@
+{
+  "apiBase": "https://association-api.yacincianai31.workers.dev",
+  "fallbacks": ["https://association-gateway.pages.dev"]
+}
