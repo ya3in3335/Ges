@@ -14,7 +14,7 @@ API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
 curl -fsS "$API/setWebhook" -H 'content-type: application/json' -d "{
   \"url\": \"${API_BASE_URL%/}/telegram/webhook\",
   \"secret_token\": \"${TELEGRAM_WEBHOOK_SECRET}\",
-  \"allowed_updates\": [\"message\"],
+  \"allowed_updates\": [\"message\", \"my_chat_member\"],
   \"drop_pending_updates\": true,
   \"max_connections\": 10
 }"; echo

@@ -221,3 +221,17 @@ describe('Telegram phone verification', () => {
     expect((app.db.raw.prepare('SELECT status FROM channel_outbox').get() as { status: string }).status).toBe('sent');
   });
 });
+
+describe('admin channel detection', () => {
+  it('records the channel id privately when the bot becomes a channel admin', async () => {
+    const r = await app.req('POST', '/telegram/webhook', {
+      headers: { 'x-telegram-bot-api-secret-token': 'webhook-secret-xyz' },
+      body: { update_id: 9, my_chat_member: { chat: { id: -1001234, type: 'channel', title: 'إدارة' }, from: { id: 1 }, new_chat_member: { status: 'administrator', user: { id: 2, is_bot: true }, can_post_messages: true } } },
+    });
+    expect(r.status).toBe(200);
+    const row = app.db.raw.prepare(`SELECT value, is_public FROM application_settings WHERE key = 'telegram_detected_channel'`).get() as { value: string; is_public: number };
+    expect(JSON.parse(row.value)).toMatchObject({ id: -1001234, canPost: true });
+    expect(row.is_public).toBe(0);
+    expect((await app.req('GET', '/api/settings')).body.settings.telegram_detected_channel).toBeUndefined();
+  });
+});

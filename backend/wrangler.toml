@@ -9,7 +9,7 @@ compatibility_flags = ["nodejs_compat"]
 # Public, non-secret configuration.
 TELEGRAM_BOT_USERNAME = "forge_flow_bot" # public bot username (without @); the token is a secret
 ALLOWED_ORIGINS = ""                # comma-separated admin dashboard origins, e.g. "https://admin.example.org"
-PUBLIC_BASE_URL = ""                # e.g. "https://api.example.org" (used for R2 media URLs)
+PUBLIC_BASE_URL = "https://association-api.yacincianai31.workers.dev" # used for R2 media URLs
 ACCESS_TOKEN_TTL_SECONDS = "900"
 REFRESH_TOKEN_TTL_DAYS = "30"
 VERIFICATION_TTL_SECONDS = "600"

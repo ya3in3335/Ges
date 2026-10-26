@@ -78,7 +78,12 @@ interface TgMessage {
   forward_date?: number;
   via_bot?: unknown;
 }
-interface TgUpdate { update_id: number; message?: TgMessage }
+interface TgChatMember {
+  chat: { id: number; type: string; title?: string };
+  from: TgUser;
+  new_chat_member: { status: string; user: TgUser; can_post_messages?: boolean };
+}
+interface TgUpdate { update_id: number; message?: TgMessage; my_chat_member?: TgChatMember }
 
 type Lang = 'ar' | 'fr';
 const T = {
@@ -146,6 +151,11 @@ export async function telegramWebhook(ctx: Ctx): Promise<Response> {
   const fresh = await ctx.env.DB.prepare('INSERT INTO telegram_updates (update_id, received_at) VALUES (?, ?) ON CONFLICT DO NOTHING')
     .bind(update.update_id, ctx.now).run();
   if (!fresh.meta.changes) return json({ ok: true, duplicate: true });
+
+  if (update.my_chat_member) {
+    await recordChannelMembership(ctx, update.my_chat_member);
+    return json({ ok: true });
+  }
 
   const msg = update.message;
   if (!msg?.from || msg.from.is_bot || msg.chat.type !== 'private') return json({ ok: true });
@@ -346,3 +356,17 @@ export async function expireVerifications(db: D1Database, now: number): Promise<
   ]);
 }
 
+
+/**
+ * When the bot is made an administrator of a channel, remember the channel id (private setting)
+ * so the operator does not have to look it up. It is only *used* once copied into the
+ * TELEGRAM_ADMIN_CHANNEL_ID secret.
+ */
+async function recordChannelMembership(ctx: Ctx, m: TgChatMember): Promise<void> {
+  if (m.chat.type !== 'channel') return;
+  const value = JSON.stringify({ id: m.chat.id, title: (m.chat.title ?? '').slice(0, 100), status: m.new_chat_member.status, canPost: !!m.new_chat_member.can_post_messages, at: ctx.now });
+  await ctx.env.DB.prepare(
+    `INSERT INTO application_settings (key, value, is_public, updated_at) VALUES ('telegram_detected_channel', ?, 0, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  ).bind(value, ctx.now).run();
+}
