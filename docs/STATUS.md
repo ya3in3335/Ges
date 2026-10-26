@@ -21,7 +21,8 @@ Legend: ✅ done and verified here · 🧪 covered by automated tests · 🔑 wa
 
 ## Deployed (production, Cloudflare free plan)
 - API: `https://association-api.yacincianai31.workers.dev` (D1 `association_db`, cron every 10 min)
-- Telegram bot @forge_flow_bot connected by webhook (secret-header protected). Admin channel: waiting for the bot to be added as channel admin (the Worker records the channel id automatically).
+- Telegram bot @forge_flow_bot connected by webhook (secret-header protected); private admin channel linked (test message delivered).
+- Supervisor devices are approved from the bot by the configured approver (TELEGRAM_APPROVER_IDS).
 
 ## Tested here (actual runs)
 - Backend: 108 Vitest tests passing (real SQL via a `node:sqlite` D1 shim) + `tsc` + Wrangler bundle.
