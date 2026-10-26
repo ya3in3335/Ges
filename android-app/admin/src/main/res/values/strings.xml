@@ -200,4 +200,16 @@
 صالح لمرة واحدة خلال 48 ساعة. لا تشاركه مع أي شخص آخر.</string>
     <string name="dev_disconnect">فصل هذا الجهاز</string>
     <string name="dev_disconnect_confirm">فصل هذا الهاتف؟ ستحتاج رمز تفعيل جديداً لاستعماله مجدداً.</string>
+    <string name="req_hint">اكتب اسمك واضغط «طلب التفعيل». يصل الطلب إلى مسؤول الجمعية عبر تيليغرام، وعند موافقته يفتح التطبيق مباشرة.</string>
+    <string name="req_name">اسمك الكامل</string>
+    <string name="req_button">طلب التفعيل</string>
+    <string name="req_waiting">تم إرسال الطلب، بانتظار موافقة المسؤول…</string>
+    <string name="req_waiting_hint">يمكنك إغلاق التطبيق والعودة لاحقاً، سيُفتح تلقائياً بعد الموافقة.</string>
+    <string name="req_cancel">إلغاء الطلب</string>
+    <string name="req_rejected">رفض المسؤول طلب التفعيل.</string>
+    <string name="req_expired">انتهت صلاحية الطلب (24 ساعة). أرسل طلباً جديداً.</string>
+    <string name="req_again">إرسال طلب جديد</string>
+    <string name="req_have_code">لدي رمز تفعيل</string>
+    <string name="req_use_bot">الرجوع إلى طلب التفعيل</string>
+    <string name="req_not_configured">التفعيل عبر تيليغرام غير مهيأ بعد. استعمل رمز التفعيل.</string>
 </resources>

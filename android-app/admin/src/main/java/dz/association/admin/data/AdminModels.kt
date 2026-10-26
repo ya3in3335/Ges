@@ -236,3 +236,12 @@ import kotlinx.serialization.Serializable
     val role: String,
 )
 @Serializable data class DeviceList(val items: List<DeviceRow>)
+
+// ── Activation approved from Telegram ──
+@Serializable data class DeviceRequestBody(val name: String, val deviceName: String? = null)
+@Serializable data class DeviceRequestCreated(val requestId: String, val secret: String, val expiresAt: Long)
+@Serializable data class DeviceRequestStatus(
+    val status: String,
+    val user: dz.association.app.core.network.User? = null,
+    val tokens: dz.association.app.core.network.Tokens? = null,
+)

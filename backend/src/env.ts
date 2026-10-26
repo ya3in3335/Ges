@@ -14,6 +14,8 @@ export interface Env {
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_WEBHOOK_SECRET?: string;
   TELEGRAM_ADMIN_CHANNEL_ID?: string;
+  /** Comma-separated Telegram user ids allowed to approve supervisor devices from the bot. */
+  TELEGRAM_APPROVER_IDS?: string;
   FCM_SERVICE_ACCOUNT_JSON?: string;
   RESEND_API_KEY?: string;
 }

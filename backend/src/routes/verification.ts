@@ -7,6 +7,7 @@ import { verificationAudit } from '../lib/audit';
 import { maskPhone, normalizeTelegramPhone } from '../lib/phone';
 import { flushChannelOutbox } from '../services/channel';
 import { sendMessage } from '../services/telegramApi';
+import { handleDeviceDecision } from './deviceRequests';
 
 const MAX_CONTACT_ATTEMPTS = 3;
 const TOKEN_RE = /^[A-Za-z0-9_-]{32,64}$/;
@@ -83,7 +84,7 @@ interface TgChatMember {
   from: TgUser;
   new_chat_member: { status: string; user: TgUser; can_post_messages?: boolean };
 }
-interface TgUpdate { update_id: number; message?: TgMessage; my_chat_member?: TgChatMember }
+interface TgUpdate { update_id: number; message?: TgMessage; my_chat_member?: TgChatMember; callback_query?: Parameters<typeof handleDeviceDecision>[1] }
 
 type Lang = 'ar' | 'fr';
 const T = {
@@ -152,6 +153,11 @@ export async function telegramWebhook(ctx: Ctx): Promise<Response> {
     .bind(update.update_id, ctx.now).run();
   if (!fresh.meta.changes) return json({ ok: true, duplicate: true });
 
+  if (update.callback_query) {
+    await handleDeviceDecision(ctx, update.callback_query);
+    return json({ ok: true });
+  }
+
   if (update.my_chat_member) {
     await recordChannelMembership(ctx, update.my_chat_member);
     return json({ ok: true });
@@ -159,6 +165,13 @@ export async function telegramWebhook(ctx: Ctx): Promise<Response> {
 
   const msg = update.message;
   if (!msg?.from || msg.from.is_bot || msg.chat.type !== 'private') return json({ ok: true });
+
+  if (msg.text?.trim() === '/id') {
+    // Lets the owner find their Telegram id to be configured as an approver.
+    await verificationAudit(ctx.env.DB, ctx.now, { telegramUserId: msg.from.id, event: 'id_request' }).run();
+    await sendMessage(ctx, msg.chat.id, `معرّفك في تيليغرام: ${msg.from.id}`);
+    return json({ ok: true });
+  }
 
   if (msg.contact) await handleContact(ctx, msg);
   else if (msg.text?.startsWith('/start')) await handleStart(ctx, msg);

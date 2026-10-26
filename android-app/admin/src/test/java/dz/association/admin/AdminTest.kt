@@ -37,13 +37,15 @@ class AdminTest {
     private lateinit var server: MockWebServer
     private lateinit var session: SessionManager
     private lateinit var admin: AdminSession
+    private lateinit var store: TokenStore
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false; encodeDefaults = true }
 
     @Before fun setUp() {
         server = MockWebServer().apply { start() }
-        session = SessionManager(TokenStore(ApplicationProvider.getApplicationContext(), PlainCrypto()), json).also { it.clear() }
+        store = TokenStore(ApplicationProvider.getApplicationContext(), PlainCrypto())
+        session = SessionManager(store, json).also { it.clear() }
         val retrofit = Retrofit.Builder().baseUrl(server.url("/")).addConverterFactory(json.asConverterFactory("application/json".toMediaType())).build()
-        admin = AdminSession(retrofit.create(ApiService::class.java), retrofit.create(dz.association.admin.data.AdminApi::class.java), session)
+        admin = AdminSession(retrofit.create(ApiService::class.java), retrofit.create(dz.association.admin.data.AdminApi::class.java), session, store)
     }
 
     @After fun tearDown() = server.shutdown()
@@ -72,6 +74,30 @@ class AdminTest {
         assertTrue(body.contains("\"code\":\"12345678\""))
         assertFalse(body.contains("password"))
         assertEquals("R", session.refreshToken)
+    }
+
+    @Test fun telegramApprovalFlowSignsInOnlyAfterAcceptance() = runTest {
+        server.enqueue(MockResponse().setResponseCode(201).setBody("""{"requestId":"r1","secret":"S3cr3t","expiresAt":1}"""))
+        assertEquals(Result.Ok(Unit), admin.requestActivation("سمير"))
+        assertEquals("r1", admin.pendingRequestId)
+        server.takeRequest()
+        server.enqueue(MockResponse().setBody("""{"status":"pending"}"""))
+        assertEquals(Result.Ok("pending"), admin.checkActivation())
+        assertEquals("S3cr3t", server.takeRequest().getHeader("x-request-secret"))
+        assertNull(session.refreshToken)
+        server.enqueue(MockResponse().setBody("""{"status":"approved",""" + loginBody("EDITOR").drop(1)))
+        assertEquals(Result.Ok("approved"), admin.checkActivation())
+        assertEquals("R", session.refreshToken)
+        assertNull(admin.pendingRequestId)
+    }
+
+    @Test fun rejectedRequestIsCleared() = runTest {
+        server.enqueue(MockResponse().setResponseCode(201).setBody("""{"requestId":"r1","secret":"s","expiresAt":1}"""))
+        admin.requestActivation("سمير")
+        server.enqueue(MockResponse().setBody("""{"status":"rejected"}"""))
+        assertEquals(Result.Ok("rejected"), admin.checkActivation())
+        assertNull(admin.pendingRequestId)
+        assertNull(session.refreshToken)
     }
 
     @Test fun refusesMemberAccountsAndStoresNothing() = runTest {

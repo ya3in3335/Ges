@@ -78,6 +78,8 @@ interface AdminApi {
     @GET("api/admin/notifications") suspend fun notifications(): NotificationLog
     @POST("api/admin/notifications") suspend fun sendNotification(@Body b: SendNotification): SendResult
 
+    @POST("api/auth/device-requests") suspend fun requestActivation(@Body b: DeviceRequestBody): DeviceRequestCreated
+    @GET("api/auth/device-requests/{id}") suspend fun pollActivation(@Path("id") id: String, @retrofit2.http.Header("x-request-secret") secret: String): DeviceRequestStatus
     @POST("api/auth/activate") suspend fun activate(@Body b: ActivateRequest): dz.association.app.core.network.AuthResponse
     @POST("api/admin/activation-codes") suspend fun createActivationCode(@Body b: ActivationCodeRequest): ActivationCode
     @GET("api/admin/devices") suspend fun devices(): DeviceList

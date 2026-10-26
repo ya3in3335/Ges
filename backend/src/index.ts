@@ -15,6 +15,7 @@ import * as settings from './routes/settings';
 import * as notifications from './routes/notifications';
 import * as admin from './routes/admin';
 import * as devices from './routes/devices';
+import * as deviceRequests from './routes/deviceRequests';
 import { home } from './routes/home';
 import { flushChannelOutbox } from './services/channel';
 
@@ -38,6 +39,8 @@ export const router = new Router()
   .post('/api/auth/refresh', auth.refresh)
   .post('/api/auth/logout', auth.logout)
   .post('/api/auth/activate', devices.activateDevice)
+  .post('/api/auth/device-requests', deviceRequests.createDeviceRequest)
+  .get('/api/auth/device-requests/:id', deviceRequests.pollDeviceRequest)
   .post('/api/auth/password/forgot', auth.forgotPassword)
   .post('/api/auth/password/reset', auth.resetPassword)
   .post('/api/auth/email/send', auth.sendEmailVerification)

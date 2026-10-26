@@ -200,4 +200,16 @@
 Valable une fois sous 48 h. Ne le partagez pas.</string>
     <string name="dev_disconnect">Déconnecter cet appareil</string>
     <string name="dev_disconnect_confirm">Déconnecter ce téléphone ? Un nouveau code sera nécessaire.</string>
+    <string name="req_hint">Saisissez votre nom puis « Demander l’activation ». Le responsable reçoit la demande sur Telegram ; l’application s’ouvre dès son accord.</string>
+    <string name="req_name">Votre nom complet</string>
+    <string name="req_button">Demander l’activation</string>
+    <string name="req_waiting">Demande envoyée, en attente de validation…</string>
+    <string name="req_waiting_hint">Vous pouvez fermer l’application ; elle s’ouvrira après validation.</string>
+    <string name="req_cancel">Annuler la demande</string>
+    <string name="req_rejected">La demande a été refusée.</string>
+    <string name="req_expired">La demande a expiré (24 h). Envoyez-en une nouvelle.</string>
+    <string name="req_again">Nouvelle demande</string>
+    <string name="req_have_code">J’ai un code d’activation</string>
+    <string name="req_use_bot">Revenir à la demande d’activation</string>
+    <string name="req_not_configured">La validation Telegram n’est pas configurée. Utilisez un code.</string>
 </resources>

@@ -33,6 +33,8 @@ import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Icon
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.compose.runtime.LaunchedEffect
 import dz.association.admin.ui.adminError
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
@@ -83,7 +85,29 @@ import javax.inject.Inject
 class ActivationVm @Inject constructor(private val session: AdminSession) : ViewModel() {
     val busy = MutableStateFlow(false)
     val error = MutableStateFlow<AppError?>(null)
-    fun activate(code: String) = viewModelScope.launch {
+    /** null = form, "pending" = waiting for the owner, "rejected"/"expired" = finished. */
+    val stage = MutableStateFlow<String?>(if (session.pendingRequestId != null) "pending" else null)
+
+    fun request(name: String) = viewModelScope.launch {
+        busy.value = true; error.value = null
+        when (val r = session.requestActivation(name)) { is Result.Ok -> stage.value = "pending"; is Result.Err -> error.value = r.error }
+        busy.value = false
+    }
+
+    /** Polls every 4 s while the screen is visible; stops on a final answer. */
+    suspend fun waitForDecision() {
+        while (stage.value == "pending") {
+            when (val r = session.checkActivation()) {
+                is Result.Ok -> if (r.value != "pending") stage.value = if (r.value == "approved") "approved" else r.value
+                is Result.Err -> Unit
+            }
+            kotlinx.coroutines.delay(4_000)
+        }
+    }
+
+    fun restart() { session.cancelRequest(); stage.value = null; error.value = null }
+
+    fun activateWithCode(code: String) = viewModelScope.launch {
         busy.value = true; error.value = null
         val r = session.activate(code)
         if (r is Result.Err) error.value = r.error
@@ -91,12 +115,22 @@ class ActivationVm @Inject constructor(private val session: AdminSession) : View
     }
 }
 
-/** First-launch screen: the supervisor types the 8-digit code once; no login afterwards. */
+/**
+ * First launch: the supervisor sends an activation request with their name; the owner accepts it
+ * from the Telegram bot and the app opens by itself. A one-time code remains available as a fallback.
+ */
 @Composable
 fun ActivationScreen(vm: ActivationVm = hiltViewModel()) {
+    var name by rememberSaveable { mutableStateOf("") }
     var code by rememberSaveable { mutableStateOf("") }
+    var useCode by rememberSaveable { mutableStateOf(false) }
     val busy by vm.busy.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
+    val stage by vm.stage.collectAsStateWithLifecycle()
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(stage) {
+        if (stage == "pending") lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) { vm.waitForDecision() }
+    }
     Column(
         Modifier.fillMaxSize().statusBarsPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -104,20 +138,40 @@ fun ActivationScreen(vm: ActivationVm = hiltViewModel()) {
         Spacer(Modifier.height(32.dp))
         LogoImage(Modifier.height(130.dp))
         Text(stringResource(R.string.act_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(stringResource(R.string.act_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-        OutlinedTextField(
-            value = code,
-            onValueChange = { v -> code = v.filter(Char::isDigit).take(8) },
-            singleLine = true,
-            placeholder = { Text("• • • •  • • • •", Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-            textStyle = MaterialTheme.typography.headlineMedium.copy(textAlign = TextAlign.Center, letterSpacing = 6.sp, textDirection = TextDirection.Ltr),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-            shape = MaterialTheme.shapes.large,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        error?.let { Text(if ((it as? AppError.Api)?.code == "invalid_code") stringResource(R.string.act_invalid) else adminError(it), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center) }
-        PrimaryButton(stringResource(R.string.act_button), { vm.activate(code) }, enabled = code.length == 8, loading = busy)
-        Text(stringResource(R.string.act_once), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline, textAlign = TextAlign.Center)
+        when {
+            stage == "pending" -> {
+                androidx.compose.material3.CircularProgressIndicator()
+                Text(stringResource(R.string.req_waiting), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+                Text(stringResource(R.string.req_waiting_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                androidx.compose.material3.TextButton(onClick = { vm.restart() }) { Text(stringResource(R.string.req_cancel)) }
+            }
+            stage == "rejected" || stage == "expired" || stage == "claimed" -> {
+                Text(stringResource(if (stage == "rejected") R.string.req_rejected else R.string.req_expired), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+                PrimaryButton(stringResource(R.string.req_again), { vm.restart() })
+            }
+            !useCode -> {
+                Text(stringResource(R.string.req_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                OutlinedTextField(name, { if (it.length <= 60) name = it }, label = { Text(stringResource(R.string.req_name)) }, singleLine = true, shape = MaterialTheme.shapes.large, modifier = Modifier.fillMaxWidth())
+                error?.let { Text(if ((it as? AppError.Api)?.code == "approval_not_configured") stringResource(R.string.req_not_configured) else adminError(it), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center) }
+                PrimaryButton(stringResource(R.string.req_button), { vm.request(name) }, enabled = name.trim().length >= 2, loading = busy)
+                androidx.compose.material3.TextButton(onClick = { useCode = true }) { Text(stringResource(R.string.req_have_code)) }
+            }
+            else -> {
+                Text(stringResource(R.string.act_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { v -> code = v.filter(Char::isDigit).take(8) },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.headlineMedium.copy(textAlign = TextAlign.Center, letterSpacing = 6.sp, textDirection = TextDirection.Ltr),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    shape = MaterialTheme.shapes.large,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                error?.let { Text(if ((it as? AppError.Api)?.code == "invalid_code") stringResource(R.string.act_invalid) else adminError(it), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center) }
+                PrimaryButton(stringResource(R.string.act_button), { vm.activateWithCode(code) }, enabled = code.length == 8, loading = busy)
+                androidx.compose.material3.TextButton(onClick = { useCode = false }) { Text(stringResource(R.string.req_use_bot)) }
+            }
+        }
     }
 }
 
