@@ -64,11 +64,13 @@ export function codeEmail(kind: 'verify' | 'reset', code: string, minutes: numbe
     : { subject: 'إعادة تعيين كلمة المرور / Réinitialisation du mot de passe', ar: 'رمز إعادة تعيين كلمة المرور هو:', fr: 'Votre code de réinitialisation est :' };
   const ar2 = `صالح لمدة ${minutes} دقيقة. إذا لم تطلب هذا الرمز فتجاهل هذه الرسالة.`;
   const fr2 = `Valable ${minutes} minutes. Si vous n’êtes pas à l’origine de cette demande, ignorez ce message.`;
-  const text = `${t.ar} ${code}\n${ar2}\n\n${t.fr} ${code}\n${fr2}`;
+  const noReply = { ar: 'هذه رسالة آلية، يُرجى عدم الرد عليها.', fr: 'Message automatique, merci de ne pas y répondre.' };
+  const text = `${t.ar} ${code}\n${ar2}\n\n${t.fr} ${code}\n${fr2}\n\n— ${noReply.ar} / ${noReply.fr}`;
   const html = `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;max-width:480px;margin:auto;padding:24px;text-align:center">
 <p style="font-size:16px">${t.ar}</p>
 <p style="font-size:34px;letter-spacing:8px;font-weight:bold;margin:16px 0" dir="ltr">${code}</p>
 <p style="color:#666;font-size:13px">${ar2}</p><hr style="border:none;border-top:1px solid #eee;margin:20px 0">
-<div dir="ltr"><p style="font-size:14px">${t.fr} <b>${code}</b></p><p style="color:#666;font-size:12px">${fr2}</p></div></div>`;
+<div dir="ltr"><p style="font-size:14px">${t.fr} <b>${code}</b></p><p style="color:#666;font-size:12px">${fr2}</p></div>
+<p style="color:#999;font-size:11px;margin-top:20px">${noReply.ar}<br><span dir="ltr">${noReply.fr}</span></p></div>`;
   return { subject: t.subject, text, html };
 }
