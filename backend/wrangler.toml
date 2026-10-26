@@ -18,7 +18,7 @@ EMAIL_FROM = ""                     # sender address when RESEND_API_KEY is conf
 [[d1_databases]]
 binding = "DB"
 database_name = "association_db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "1fed609b-14f8-474f-8a7c-56d997e8128b"
 migrations_dir = "migrations"
 
 # Optional: uncomment after creating the bucket (`wrangler r2 bucket create association-media`).
