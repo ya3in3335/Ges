@@ -275,7 +275,7 @@ fun SettingsScreen(back: () -> Unit, onLoggedOut: () -> Unit, vm: AccountViewMod
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         PasswordField(cur, { cur = it }, stringResource(R.string.current_password))
                         PasswordField(new, { new = it }, stringResource(R.string.reset_new_password), supporting = stringResource(R.string.password_rules))
-                        error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
+                        error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error); dz.association.app.ui.components.NetworkDetail(it) }
                     }
                 },
                 confirmButton = { TextButton(enabled = !busy && AuthValidation.passwordValid(new), onClick = { vm.changePassword(cur, new) { dialog = null } }) { Text(stringResource(R.string.save)) } },
@@ -291,7 +291,7 @@ fun SettingsScreen(back: () -> Unit, onLoggedOut: () -> Unit, vm: AccountViewMod
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(R.string.delete_account_body))
                         PasswordField(pw, { pw = it }, stringResource(R.string.password))
-                        error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
+                        error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error); dz.association.app.ui.components.NetworkDetail(it) }
                     }
                 },
                 confirmButton = {

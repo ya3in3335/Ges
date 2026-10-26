@@ -231,7 +231,7 @@ fun PollDetailScreen(back: () -> Unit, nav: (String) -> Unit, vm: PollDetailView
                         else if (p.resultVisibility == "after_close") Text(stringResource(R.string.poll_results_hidden), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
                         else if (p.resultVisibility == "admins") Text(stringResource(R.string.poll_results_admins), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
 
-                        voteError?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
+                        voteError?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error); dz.association.app.ui.components.NetworkDetail(it) }
 
                         if (p.state == "active" && !d.hasVoted) {
                             when {

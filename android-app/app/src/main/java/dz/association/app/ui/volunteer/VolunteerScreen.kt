@@ -156,7 +156,7 @@ private fun VolunteerForm(vm: VolunteerViewModel, defaultName: String, defaultCo
         field(availability, { availability = it }, R.string.volunteer_availability)
         field(areas, { areas = it }, R.string.volunteer_areas, mandatory = false)
         field(experience, { experience = it }, R.string.volunteer_experience, mandatory = false, lines = 3)
-        error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
+        error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error); dz.association.app.ui.components.NetworkDetail(it) }
         PrimaryButton(stringResource(R.string.volunteer_submit), {
             tried = true
             if (listOf(name, contact, skills, availability).all { it.isNotBlank() }) {

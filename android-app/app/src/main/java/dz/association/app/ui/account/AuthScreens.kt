@@ -110,7 +110,7 @@ fun LoginScreen(back: () -> Unit, nav: (String) -> Unit, onDone: () -> Unit, vm:
             OutlinedTextField(id, { id = it }, label = { Text(stringResource(R.string.identifier)) }, singleLine = true, textStyle = ltr,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth().testTag("login_identifier"))
             PasswordField(pw, { pw = it }, stringResource(R.string.password), Modifier.testTag("login_password"))
-            error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
+            error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error); dz.association.app.ui.components.NetworkDetail(it) }
             PrimaryButton(stringResource(R.string.login), { vm.login(id, pw, onDone) }, enabled = id.isNotBlank() && pw.isNotBlank(), loading = busy)
             TextButton(onClick = { nav(Routes.FORGOT) }) { Text(stringResource(R.string.forgot_password)) }
             TextButton(onClick = { nav(Routes.REGISTER) }) { Text(stringResource(R.string.no_account)) }
@@ -148,7 +148,7 @@ fun RegisterScreen(back: () -> Unit, onRegistered: () -> Unit, vm: AuthViewModel
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth())
             PasswordField(pw, { pw = it }, stringResource(R.string.password), isError = pwErr, supporting = stringResource(if (pwErr) R.string.err_password_weak else R.string.password_rules))
             PasswordField(confirm, { confirm = it }, stringResource(R.string.confirm_password), isError = confirmErr, supporting = if (confirmErr) stringResource(R.string.err_password_mismatch) else null)
-            error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
+            error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error); dz.association.app.ui.components.NetworkDetail(it) }
             PrimaryButton(stringResource(R.string.register), {
                 tried = true
                 if (AuthValidation.nameValid(name) && AuthValidation.emailValid(email) && AuthValidation.normalizePhone(phone) != null &&
@@ -180,7 +180,7 @@ fun ForgotPasswordScreen(back: () -> Unit, vm: AuthViewModel = hiltViewModel()) 
                 PrimaryButton(stringResource(R.string.confirm), { vm.reset(id, code, pw) }, enabled = code.length == 6 && AuthValidation.passwordValid(pw), loading = busy)
             }
             info?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.primary) }
-            error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error) }
+            error?.let { Text(errorMessage(it), color = MaterialTheme.colorScheme.error); dz.association.app.ui.components.NetworkDetail(it) }
         }
     }
 }

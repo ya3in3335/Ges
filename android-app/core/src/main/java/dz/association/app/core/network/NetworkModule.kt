@@ -36,9 +36,15 @@ object NetworkModule {
 
     @Provides @Singleton
     fun okHttp(@ApplicationContext ctx: Context, session: SessionManager, json: Json): OkHttpClient {
+        val bootstrap = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).build()
         val base = OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
+            .dns(ResilientDns(bootstrap))
+            .connectTimeout(20, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .callTimeout(75, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .addInterceptor(RetryInterceptor())
             // Respects the API's Cache-Control headers for public content (saves bandwidth).
             .cache(Cache(File(ctx.cacheDir, "http"), 10L * 1024 * 1024))
             .build()

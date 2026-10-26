@@ -82,6 +82,7 @@ fun AppNavHost(
     onDeepLinkHandled: () -> Unit,
     navController: NavHostController = rememberNavController(),
 ) {
+    val lowEnd = dz.association.app.ui.theme.LocalLowEnd.current
     val entry by navController.currentBackStackEntryAsState()
     val current = entry?.destination?.route
     val nav: (String) -> Unit = { navController.navigate(it) { launchSingleTop = true } }
@@ -139,15 +140,17 @@ fun AppNavHost(
             navController = navController,
             startDestination = if (showIntro) Routes.INTRO else Routes.HOME,
             modifier = Modifier.padding(padding).consumeWindowInsets(padding),
-            enterTransition = { fadeIn(tween(220)) },
-            exitTransition = { fadeOut(tween(180)) },
+            enterTransition = { Motion.enter(this, lowEnd) },
+            exitTransition = { Motion.exit(this, lowEnd) },
+            popEnterTransition = { Motion.popEnter(this, lowEnd) },
+            popExitTransition = { Motion.popExit(this, lowEnd) },
         ) {
             composable(Routes.INTRO, exitTransition = { fadeOut(tween(450)) }) {
                 IntroScreen(onFinished = {
                     navController.navigate(Routes.HOME) { popUpTo(Routes.INTRO) { inclusive = true } }
                 })
             }
-            composable(Routes.HOME, enterTransition = { fadeIn(tween(450)) }) { HomeScreen(nav) }
+            composable(Routes.HOME) { HomeScreen(nav) }
             composable(Routes.ACTIVITIES) { ActivitiesScreen(nav) }
             composable(Routes.POLLS) { PollsScreen(nav) }
             composable(Routes.VOLUNTEER) { VolunteerScreen(nav) }

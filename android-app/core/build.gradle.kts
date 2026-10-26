@@ -59,6 +59,7 @@ dependencies {
     api(libs.retrofit)
     api(libs.retrofit.serialization)
     api(libs.okhttp)
+    implementation(libs.okhttp.doh)
     implementation(libs.okhttp.logging)
     api(libs.kotlinx.serialization)
     api(libs.room.runtime)

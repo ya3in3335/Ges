@@ -32,7 +32,7 @@ fun Throwable.toAppError(): AppError = when (this) {
             else -> AppError.Api(code(), code)
         }
     }
-    is IOException -> AppError.Network
+    is IOException -> { NetworkDiagnostics.record(this); AppError.Network }
     else -> AppError.Unknown
 }
 

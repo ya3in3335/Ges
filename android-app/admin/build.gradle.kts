@@ -47,6 +47,15 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
         }
+        // Optimised test build (R8, not debuggable) signed with the debug key: installs over the
+        // debug build and runs at release speed. Not for distribution.
+        create("staging") {
+            initWith(getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-test"
+            matchingFallbacks += listOf("release")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -71,6 +80,8 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    // Installs the bundled baseline profiles (Compose etc.) even for APKs installed outside Play: much smoother first runs.
+    implementation(libs.profileinstaller)
     implementation(libs.hilt.android)
     implementation(libs.androidx.activity.compose)
     implementation(libs.navigation.compose)

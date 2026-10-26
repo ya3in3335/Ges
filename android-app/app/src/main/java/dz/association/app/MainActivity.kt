@@ -34,11 +34,14 @@ class MainActivity : AppCompatActivity() {
         val initial = runBlocking { preferences.current() }
         // Intro plays on cold start only (not after rotation / process restore) and not when opened from a notification.
         val showIntro = savedInstanceState == null && initial.playIntro && deepLink == null
+        val lowEnd = dz.association.app.ui.theme.DevicePerformance.isLowEnd(this)
         setContent {
             val prefs by preferences.prefs.collectAsStateWithLifecycle(initialValue = initial)
             AssociationTheme((prefs as LocalPrefs).theme, glass = true) {
+                androidx.compose.runtime.CompositionLocalProvider(dz.association.app.ui.theme.LocalLowEnd provides lowEnd) {
                 AuroraBackground {
                     AppNavHost(showIntro = showIntro, pendingDeepLink = deepLink, onDeepLinkHandled = { deepLink = null })
+                }
                 }
             }
         }

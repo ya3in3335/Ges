@@ -59,8 +59,10 @@ fun Modifier.glass(shape: Shape, elevation: Dp = 14.dp): Modifier {
         else listOf(Color.White, Color.White.copy(alpha = 0.35f), Brand.Sun.copy(alpha = 0.25f)),
     )
     val glow = if (dark) Color.Black.copy(alpha = 0.6f) else Brand.Maroon.copy(alpha = 0.22f)
+    // Large coloured shadows are the most expensive part of the effect on weak GPUs.
+    val e = if (LocalLowEnd.current) 0.dp else elevation
     return this
-        .shadow(elevation, shape, clip = false, ambientColor = glow, spotColor = glow)
+        .then(if (e > 0.dp) Modifier.shadow(e, shape, clip = false, ambientColor = glow, spotColor = glow) else Modifier)
         .background(fill, shape)
         .border(BorderStroke(1.dp, edge), shape)
 }
@@ -105,6 +107,7 @@ fun Modifier.pressTilt(maxDegrees: Float = 8f): Modifier = composed {
 
 /** Gentle floating motion with a slight 3D turn, for hero elements such as the logo. */
 fun Modifier.float3d(amplitude: Dp = 5.dp, turnDegrees: Float = 7f): Modifier = composed {
+    if (LocalLowEnd.current) return@composed this
     val t = rememberInfiniteTransition(label = "float")
     val p by t.animateFloat(-1f, 1f, infiniteRepeatable(tween(3600, easing = LinearEasing), RepeatMode.Reverse), label = "p")
     graphicsLayer {
@@ -124,13 +127,18 @@ fun AuroraBackground(modifier: Modifier = Modifier, content: @Composable BoxScop
     val base = if (dark) listOf(Color(0xFF0E080A), Color(0xFF1A0C11), Color(0xFF0B0709))
     else listOf(Color(0xFFFFF7F2), Color(0xFFFBEDEA), Color(0xFFF7F1F4))
     val w = LocalConfiguration.current.screenWidthDp.dp
+    // On weak devices the backdrop stays still (no per-frame work at all).
+    val animate = !LocalLowEnd.current
     val t = rememberInfiniteTransition(label = "aurora")
-    val a by t.animateFloat(0f, 1f, infiniteRepeatable(tween(16000, easing = LinearEasing), RepeatMode.Reverse), label = "a")
-    val b by t.animateFloat(0f, 1f, infiniteRepeatable(tween(21000, easing = LinearEasing), RepeatMode.Reverse), label = "b")
+    val aAnim = if (animate) t.animateFloat(0f, 1f, infiniteRepeatable(tween(16000, easing = LinearEasing), RepeatMode.Reverse), label = "a") else null
+    val bAnim = if (animate) t.animateFloat(0f, 1f, infiniteRepeatable(tween(21000, easing = LinearEasing), RepeatMode.Reverse), label = "b") else null
+    // Read only inside graphicsLayer blocks: moving the blobs never recomposes the screen.
+    fun a() = aAnim?.value ?: 0.5f
+    fun b() = bAnim?.value ?: 0.5f
     Box(modifier.fillMaxSize().background(Brush.verticalGradient(base))) {
-        Blob(Brand.Sun, if (dark) 0.30f else 0.42f, w * 1.1f, Modifier.align(Alignment.TopEnd)) { translationX = (a - 0.5f) * 140f; translationY = -size.height * 0.35f + b * 120f }
-        Blob(Brand.Maroon, if (dark) 0.45f else 0.30f, w * 1.2f, Modifier.align(Alignment.CenterStart)) { translationX = -size.width * 0.45f + b * 160f; translationY = (a - 0.5f) * 220f }
-        Blob(Brand.Ember, if (dark) 0.22f else 0.26f, w, Modifier.align(Alignment.BottomEnd)) { translationX = size.width * 0.3f - a * 180f; translationY = size.height * 0.3f - b * 140f }
+        Blob(Brand.Sun, if (dark) 0.30f else 0.42f, w * 1.1f, Modifier.align(Alignment.TopEnd)) { translationX = (a() - 0.5f) * 140f; translationY = -size.height * 0.35f + b() * 120f }
+        Blob(Brand.Maroon, if (dark) 0.45f else 0.30f, w * 1.2f, Modifier.align(Alignment.CenterStart)) { translationX = -size.width * 0.45f + b() * 160f; translationY = (a() - 0.5f) * 220f }
+        Blob(Brand.Ember, if (dark) 0.22f else 0.26f, w, Modifier.align(Alignment.BottomEnd)) { translationX = size.width * 0.3f - a() * 180f; translationY = size.height * 0.3f - b() * 140f }
         // Text and icons drawn straight on the backdrop must use the theme's on-background colour.
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) { content() }
     }

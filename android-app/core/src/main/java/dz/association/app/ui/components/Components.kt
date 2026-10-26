@@ -170,8 +170,21 @@ fun StateMessage(icon: ImageVector, message: String, action: String? = null, onA
 }
 
 @Composable
-fun ErrorState(error: AppError, onRetry: () -> Unit, modifier: Modifier = Modifier) =
-    StateMessage(if (error == AppError.Network) Icons.Outlined.CloudOff else Icons.Outlined.ErrorOutline, errorMessage(error), stringResource(R.string.retry), onRetry, modifier)
+fun ErrorState(error: AppError, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        StateMessage(if (error == AppError.Network) Icons.Outlined.CloudOff else Icons.Outlined.ErrorOutline, errorMessage(error), stringResource(R.string.retry), onRetry)
+        NetworkDetail(error)
+    }
+}
+
+/** Small technical code under network errors (e.g. "DNS", "TIMEOUT") to help support. */
+@Composable
+fun NetworkDetail(error: AppError?) {
+    val code = dz.association.app.core.network.NetworkDiagnostics.lastFailure
+    if (error == AppError.Network && code != null) {
+        Text("($code)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+    }
+}
 
 @Composable
 fun EmptyState(message: String = stringResource(R.string.empty_generic), modifier: Modifier = Modifier) =
