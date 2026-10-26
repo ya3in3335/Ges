@@ -20,6 +20,8 @@ object NetworkDiagnostics {
     @Volatile var lastFailure: String? = null
         private set
 
+    fun recordCode(code: String) { lastFailure = code }
+
     fun record(e: Throwable) {
         lastFailure = when (e) {
             is UnknownHostException -> "DNS"

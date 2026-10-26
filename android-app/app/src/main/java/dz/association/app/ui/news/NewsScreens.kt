@@ -58,6 +58,7 @@ import dz.association.app.data.ContentRepository
 import dz.association.app.ui.components.AppTopBar
 import dz.association.app.ui.components.EmptyState
 import dz.association.app.ui.components.ErrorState
+import dz.association.app.ui.components.RefreshWhenBackOnline
 import dz.association.app.ui.components.FullScreenLoading
 import dz.association.app.ui.components.OfflineBanner
 import dz.association.app.ui.components.Pill
@@ -117,6 +118,7 @@ private val CATEGORIES = listOf(null to R.string.cat_all, "announcement" to R.st
 @Composable
 fun NewsListScreen(nav: (String) -> Unit, back: () -> Unit, vm: NewsListViewModel = hiltViewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
+    RefreshWhenBackOnline(s.fromCache) { vm.reload() }
     Scaffold(topBar = { AppTopBar(stringResource(R.string.news_title), back) }) { pad ->
         LazyColumn(Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(bottom = 24.dp)) {
             item { OfflineBanner(s.fromCache) }

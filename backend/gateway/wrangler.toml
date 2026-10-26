@@ -1,0 +1,10 @@
+# Secondary entry point for the API on a different domain (*.pages.dev), used by the apps as an
+# automatic fallback when *.workers.dev is slow or filtered on a user's network.
+# It forwards every request to the main Worker through a service binding (no extra cost, no secrets).
+name = "association-gateway"
+pages_build_output_dir = "./public"
+compatibility_date = "2024-12-30"
+
+[[services]]
+binding = "API"
+service = "association-api"

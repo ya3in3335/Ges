@@ -175,6 +175,7 @@ fun ErrorState(error: AppError, onRetry: () -> Unit, modifier: Modifier = Modifi
         StateMessage(if (error == AppError.Network) Icons.Outlined.CloudOff else Icons.Outlined.ErrorOutline, errorMessage(error), stringResource(R.string.retry), onRetry)
         NetworkDetail(error)
     }
+    AutoRetry(error, onRetry)
 }
 
 /** Small technical code under network errors (e.g. "DNS", "TIMEOUT") to help support. */

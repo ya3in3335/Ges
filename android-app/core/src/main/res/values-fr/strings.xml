@@ -13,6 +13,8 @@
     <string name="error_network">Impossible de joindre le serveur. Vérifiez votre connexion.</string>
     <string name="error_rate_limited">Trop de tentatives. Patientez un moment puis réessayez.</string>
     <string name="error_session_expired">Session expirée. Veuillez vous reconnecter.</string>
+    <string name="connection_offline">Pas de connexion — contenu enregistré affiché</string>
+    <string name="connection_back">Connexion rétablie</string>
     <string name="offline_banner">Vous êtes hors ligne — affichage du contenu enregistré</string>
     <string name="empty_generic">Aucun contenu pour le moment</string>
     <string name="see_all">Tout voir</string>

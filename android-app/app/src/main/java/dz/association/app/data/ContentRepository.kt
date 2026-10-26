@@ -42,6 +42,14 @@ class ContentRepository @Inject constructor(
             }
         }
 
+    /** Last saved copy, shown instantly while the network request runs (as other apps do). */
+    private suspend fun <T> peek(key: String, ser: KSerializer<T>): Loaded<T>? = runCatching {
+        cache.get(key)?.let { Loaded(json.decodeFromString(ser, it.json), fromCache = true, savedAt = it.savedAt) }
+    }.getOrNull()
+
+    suspend fun peekHome() = peek("home", HomeResponse.serializer())
+    suspend fun peekActivities(phase: String) = peek("activities:$phase:1", ActivityPage.serializer())
+
     suspend fun home() = cached("home", HomeResponse.serializer()) { api.home() }
     suspend fun settings() = cached("settings", SettingsResponse.serializer()) { api.settings() }
     suspend fun donations() = cached("donations", DonationsResponse.serializer()) { api.donations() }

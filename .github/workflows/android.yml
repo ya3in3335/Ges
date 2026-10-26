@@ -28,6 +28,7 @@ defaults:
 env:
   # Public build configuration from repository *variables* (Settings → Secrets and variables → Actions → Variables).
   API_BASE_URL: ${{ vars.API_BASE_URL || 'https://api.example.invalid/' }}
+  API_FALLBACK_URLS: ${{ vars.API_FALLBACK_URLS }}
   FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
   FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
   FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}

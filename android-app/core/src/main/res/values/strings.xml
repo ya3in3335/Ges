@@ -13,6 +13,8 @@
     <string name="error_network">تعذّر الاتصال بالخادم. تحقّق من اتصالك بالإنترنت.</string>
     <string name="error_rate_limited">محاولات كثيرة. يرجى الانتظار قليلاً ثم المحاولة.</string>
     <string name="error_session_expired">انتهت الجلسة. يرجى تسجيل الدخول مجدداً.</string>
+    <string name="connection_offline">لا يوجد اتصال — نعرض آخر محتوى محفوظ</string>
+    <string name="connection_back">عاد الاتصال</string>
     <string name="offline_banner">أنت غير متصل بالإنترنت — يتم عرض المحتوى المحفوظ</string>
     <string name="empty_generic">لا يوجد محتوى حالياً</string>
     <string name="see_all">عرض الكل</string>

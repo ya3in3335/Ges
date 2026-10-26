@@ -68,6 +68,7 @@ import dz.association.app.ui.components.AppCard
 import dz.association.app.ui.components.AppTopBar
 import dz.association.app.ui.components.EmptyState
 import dz.association.app.ui.components.ErrorState
+import dz.association.app.ui.components.RefreshWhenBackOnline
 import dz.association.app.ui.components.FullScreenLoading
 import dz.association.app.ui.components.OfflineBanner
 import dz.association.app.ui.components.Pill
@@ -87,10 +88,11 @@ class ActivitiesViewModel @Inject constructor(private val repo: ContentRepositor
     init { load() }
     fun select(p: String) { phase.value = p; load() }
     fun load() = viewModelScope.launch {
-        state.value = UiState.Loading
+        val saved = repo.peekActivities(phase.value)
+        state.value = saved?.let { UiState.Success(it.data.items, true) } ?: UiState.Loading
         state.value = when (val r = repo.activities(phase.value, 1)) {
             is Result.Ok -> UiState.Success(r.value.data.items, r.value.fromCache)
-            is Result.Err -> UiState.Error(r.error)
+            is Result.Err -> saved?.let { UiState.Success(it.data.items, true) } ?: UiState.Error(r.error)
         }
     }
 }
@@ -101,6 +103,7 @@ private val PHASES = listOf("upcoming" to R.string.phase_upcoming, "ongoing" to 
 fun ActivitiesScreen(nav: (String) -> Unit, vm: ActivitiesViewModel = hiltViewModel()) {
     val phase by vm.phase.collectAsStateWithLifecycle()
     val state by vm.state.collectAsStateWithLifecycle()
+    RefreshWhenBackOnline((state as? UiState.Success)?.fromCache == true) { vm.load() }
     Scaffold(topBar = { AppTopBar(stringResource(R.string.activities_title)) }) { pad ->
         Column(Modifier.padding(pad)) {
             PrimaryTabRow(selectedTabIndex = PHASES.indexOfFirst { it.first == phase }) {

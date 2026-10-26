@@ -7,8 +7,10 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// -P on the command line, then the environment (CI variables), then gradle.properties.
 fun prop(name: String, default: String = ""): String =
-    (project.findProperty(name) as String?) ?: System.getenv(name) ?: default
+    gradle.startParameter.projectProperties[name] ?: System.getenv(name)?.takeIf { it.isNotBlank() }
+        ?: (project.findProperty(name) as String?) ?: default
 
 android {
     namespace = "dz.association.app"

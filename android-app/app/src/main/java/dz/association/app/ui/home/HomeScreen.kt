@@ -88,6 +88,7 @@ import dz.association.app.ui.components.AppCard
 import dz.association.app.ui.components.LogoImage
 import dz.association.app.ui.theme.Brand
 import dz.association.app.ui.components.ErrorState
+import dz.association.app.ui.components.RefreshWhenBackOnline
 import dz.association.app.ui.components.OfflineBanner
 import dz.association.app.ui.components.Pill
 import dz.association.app.ui.components.RemoteImage
@@ -112,7 +113,8 @@ class HomeViewModel @Inject constructor(private val repo: ContentRepository, aut
     init { load() }
 
     fun load(pull: Boolean = false) = viewModelScope.launch {
-        if (pull) refreshing.value = true else if (_state.value !is UiState.Success) _state.value = UiState.Loading
+        if (pull) refreshing.value = true
+        else if (_state.value !is UiState.Success) _state.value = repo.peekHome()?.let { UiState.Success(it.data, true) } ?: UiState.Loading
         _state.value = when (val r = repo.home()) {
             is Result.Ok -> UiState.Success(r.value.data, r.value.fromCache)
             is Result.Err -> if (_state.value is UiState.Success) _state.value else UiState.Error(r.error)
@@ -128,6 +130,7 @@ fun HomeScreen(nav: (String) -> Unit, vm: HomeViewModel = hiltViewModel()) {
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val user by vm.user.collectAsStateWithLifecycle()
 
+    RefreshWhenBackOnline((state as? UiState.Success)?.fromCache == true) { vm.load() }
     PullToRefreshBox(isRefreshing = refreshing, onRefresh = { vm.load(pull = true) }, modifier = Modifier.fillMaxSize()) {
         when (val s = state) {
             UiState.Loading -> HomeSkeleton()

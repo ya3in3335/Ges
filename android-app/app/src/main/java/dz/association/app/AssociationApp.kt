@@ -3,13 +3,19 @@ package dz.association.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import coil.ImageLoader
+import coil.ImageLoaderFactory
 import dagger.hilt.android.HiltAndroidApp
+import dz.association.app.core.network.Images
+import okhttp3.OkHttpClient
+import javax.inject.Named
 import dz.association.app.core.push.PushManager
 import dz.association.app.core.util.AppLocale
 import javax.inject.Inject
 
 @HiltAndroidApp
-class AssociationApp : Application(), Configuration.Provider {
+class AssociationApp : Application(), ImageLoaderFactory, Configuration.Provider {
+    @Inject @Named("plain") lateinit var plainClient: OkHttpClient
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var push: PushManager
 
@@ -21,4 +27,6 @@ class AssociationApp : Application(), Configuration.Provider {
         AppLocale.ensureDefault()
         push.initialize()
     }
+
+    override fun newImageLoader(): ImageLoader = Images.loader(this, plainClient)
 }

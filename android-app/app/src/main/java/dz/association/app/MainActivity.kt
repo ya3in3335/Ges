@@ -10,7 +10,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.foundation.layout.Box
 import dz.association.app.core.prefs.AppPreferences
+import dz.association.app.core.util.Connectivity
+import dz.association.app.ui.components.ConnectionBanner
+import dz.association.app.ui.components.LocalOnline
 import dz.association.app.core.prefs.LocalPrefs
 import dz.association.app.ui.navigation.AppNavHost
 import dz.association.app.ui.theme.AssociationTheme
@@ -21,6 +25,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     @Inject lateinit var preferences: AppPreferences
+    @Inject lateinit var connectivity: Connectivity
 
     private var deepLink by mutableStateOf<String?>(null)
 
@@ -37,10 +42,14 @@ class MainActivity : AppCompatActivity() {
         val lowEnd = dz.association.app.ui.theme.DevicePerformance.isLowEnd(this)
         setContent {
             val prefs by preferences.prefs.collectAsStateWithLifecycle(initialValue = initial)
+            val online = connectivity.online.collectAsStateWithLifecycle(initialValue = true)
             AssociationTheme((prefs as LocalPrefs).theme, glass = true) {
-                androidx.compose.runtime.CompositionLocalProvider(dz.association.app.ui.theme.LocalLowEnd provides lowEnd) {
+                androidx.compose.runtime.CompositionLocalProvider(dz.association.app.ui.theme.LocalLowEnd provides lowEnd, LocalOnline provides online) {
                 AuroraBackground {
-                    AppNavHost(showIntro = showIntro, pendingDeepLink = deepLink, onDeepLinkHandled = { deepLink = null })
+                    Box {
+                        AppNavHost(showIntro = showIntro, pendingDeepLink = deepLink, onDeepLinkHandled = { deepLink = null })
+                        ConnectionBanner()
+                    }
                 }
                 }
             }

@@ -57,3 +57,21 @@ See `docs/ANDROID_RELEASE.md`. After publishing a release, set in Admin → Sett
    `google-services.json` is needed or committed).
 3. Project settings → Service accounts → generate a key → `wrangler secret put FCM_SERVICE_ACCOUNT_JSON`.
 Without these, notifications are stored and shown in-app and marked `not_configured` — never reported as sent.
+
+## Fallback API address (recommended)
+
+Some mobile networks are slow to reach, or filter, `*.workers.dev`. The apps can switch automatically
+to an equivalent address on another domain. `backend/gateway` is a free Cloudflare Pages project
+that forwards every request to the Worker through a service binding (no code duplication, no secrets):
+
+```bash
+cd backend
+npx wrangler pages project create association-gateway --production-branch main   # once
+cd gateway && npx --prefix .. wrangler pages deploy --branch main
+curl https://association-gateway.pages.dev/api/health    # → {"ok":true}
+```
+
+Then build the apps with `-PAPI_FALLBACK_URLS=https://association-gateway.pages.dev/`
+(or the repository variable `API_FALLBACK_URLS` in CI). The app tries the address that last worked
+first; only requests that provably never reached the server (or GET requests) are moved to the other
+address, so a vote or registration is never sent twice.

@@ -9,8 +9,10 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// -P on the command line, then the environment (CI variables), then gradle.properties.
 fun prop(name: String, default: String = ""): String =
-    (project.findProperty(name) as String?) ?: System.getenv(name) ?: default
+    gradle.startParameter.projectProperties[name] ?: System.getenv(name)?.takeIf { it.isNotBlank() }
+        ?: (project.findProperty(name) as String?) ?: default
 
 android {
     namespace = "dz.association.app.core"
@@ -21,6 +23,10 @@ android {
         val apiBase = prop("API_BASE_URL", "https://api.example.invalid/")
         require(apiBase.startsWith("https://") && apiBase.endsWith("/")) { "API_BASE_URL must be https and end with /" }
         buildConfigField("String", "API_BASE_URL", "\"$apiBase\"")
+        // Optional equivalent API addresses on other domains (comma-separated, https, ending with /).
+        val fallbacks = prop("API_FALLBACK_URLS", "").split(',').map { it.trim() }.filter { it.isNotEmpty() }
+        fallbacks.forEach { require(it.startsWith("https://") && it.endsWith("/")) { "API_FALLBACK_URLS entries must be https and end with /" } }
+        buildConfigField("String", "API_FALLBACK_URLS", "\"${fallbacks.joinToString(",")}\"")
         consumerProguardFiles("consumer-rules.pro")
     }
     compileOptions {

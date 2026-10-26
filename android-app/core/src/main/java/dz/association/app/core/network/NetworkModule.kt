@@ -18,6 +18,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.io.File
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -35,19 +36,32 @@ object NetworkModule {
     fun tokenStore(@ApplicationContext ctx: Context): TokenStore = TokenStore(ctx, KeystoreCrypto())
 
     @Provides @Singleton
-    fun okHttp(@ApplicationContext ctx: Context, session: SessionManager, json: Json): OkHttpClient {
+    fun apiHosts(@ApplicationContext ctx: Context): ApiHosts = ApiHosts(
+        listOf(BuildConfig.API_BASE_URL) + BuildConfig.API_FALLBACK_URLS.split(',').filter { it.isNotBlank() },
+        ctx.getSharedPreferences("network", Context.MODE_PRIVATE),
+    )
+
+    /** Client without credentials: also used for images, which may come from third-party hosts. */
+    @Provides @Singleton @Named("plain")
+    fun plainOkHttp(@ApplicationContext ctx: Context, hosts: ApiHosts): OkHttpClient {
         val bootstrap = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).build()
-        val base = OkHttpClient.Builder()
+        return OkHttpClient.Builder()
             .dns(ResilientDns(bootstrap))
-            .connectTimeout(20, TimeUnit.SECONDS)
+            // Short connect timeout: an unreachable address is abandoned quickly for the next one.
+            .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .callTimeout(75, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .addInterceptor(RetryInterceptor())
+            .addInterceptor(FailoverInterceptor(hosts))
             // Respects the API's Cache-Control headers for public content (saves bandwidth).
             .cache(Cache(File(ctx.cacheDir, "http"), 10L * 1024 * 1024))
             .build()
+    }
+
+    @Provides @Singleton
+    fun okHttp(@Named("plain") base: OkHttpClient, session: SessionManager, json: Json): OkHttpClient {
         val builder = base.newBuilder()
             .addInterceptor(AuthInterceptor(session))
             .authenticator(TokenAuthenticator(session, BuildConfig.API_BASE_URL, json) { base })
