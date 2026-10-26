@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+/** Firebase registers each package name separately; the ".debug" builds use their own app id. */
+fun firebaseDebugAppId(): String? = prop("FIREBASE_APP_ID_DEBUG").takeIf { it.isNotBlank() }
+
 // -P on the command line, then the environment (CI variables), then gradle.properties.
 fun prop(name: String, default: String = ""): String =
     gradle.startParameter.projectProperties[name] ?: System.getenv(name)?.takeIf { it.isNotBlank() }
@@ -57,6 +60,7 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            firebaseDebugAppId()?.let { buildConfigField("String", "FIREBASE_APP_ID", "\"$it\"") }
         }
         // Optimised test build (R8, not debuggable) signed with the debug key: installs over the
         // debug build and runs at release speed. Not for distribution.
@@ -66,6 +70,7 @@ android {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-test"
             matchingFallbacks += listOf("release")
+            firebaseDebugAppId()?.let { buildConfigField("String", "FIREBASE_APP_ID", "\"$it\"") }
         }
     }
 

@@ -129,7 +129,7 @@ fun AppNavHost(
                     navController.navigate(Routes.HOME) { popUpTo(Routes.INTRO) { inclusive = true } }
                 })
             }
-            composable(Routes.HOME) { HomeScreen(nav) }
+            composable(Routes.HOME) { AskNotificationPermissionOnce(); HomeScreen(nav) }
             composable(Routes.ACTIVITIES) { ActivitiesScreen(nav) }
             composable(Routes.POLLS) { PollsScreen(nav) }
             composable(Routes.VOLUNTEER) { VolunteerScreen(nav) }
