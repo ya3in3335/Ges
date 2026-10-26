@@ -21,6 +21,11 @@ export interface Env {
   FCM_SERVICE_ACCOUNT_JSON?: string;
   RESEND_API_KEY?: string;
   BREVO_API_KEY?: string;
+  /** SMTP sending (e.g. Gmail: SMTP_USER = the address, SMTP_PASSWORD = an app password). */
+  SMTP_HOST?: string;
+  SMTP_PORT?: string;
+  SMTP_USER?: string;
+  SMTP_PASSWORD?: string;
 }
 
 export type Role = 'SUPER_ADMIN' | 'ADMIN' | 'EDITOR' | 'VOLUNTEER' | 'USER';

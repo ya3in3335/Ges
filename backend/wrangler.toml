@@ -38,5 +38,6 @@ crons = ["*/10 * * * *"]
 #   TELEGRAM_WEBHOOK_SECRET    random [A-Za-z0-9_-]{32,256}
 #   TELEGRAM_ADMIN_CHANNEL_ID  e.g. -1001234567890 (bot must be channel admin with post permission)
 #   FCM_SERVICE_ACCOUNT_JSON   optional, Firebase service-account JSON for push delivery
+#   SMTP_USER / SMTP_PASSWORD  optional, Gmail address + app password → email verification / reset e-mails
 #   BREVO_API_KEY              optional, enables email verification / reset e-mails (free tier, no domain needed)
 #   RESEND_API_KEY             optional alternative to Brevo (requires your own domain)
