@@ -1,7 +1,7 @@
 import type { AuthUser, Ctx, Role } from '../env';
 import { forbidden, unauthorized } from './http';
 
-const RANK: Record<Role, number> = { USER: 0, VOLUNTEER: 1, EDITOR: 2, ADMIN: 3, SUPER_ADMIN: 4 };
+export const RANK: Record<Role, number> = { USER: 0, VOLUNTEER: 1, EDITOR: 2, ADMIN: 3, SUPER_ADMIN: 4 };
 
 export const roleAtLeast = (role: Role, min: Role) => RANK[role] >= RANK[min];
 export const ROLES = Object.keys(RANK) as Role[];

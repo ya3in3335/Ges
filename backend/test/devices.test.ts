@@ -92,4 +92,30 @@ describe('supervisor device activation', () => {
     await newCode(sa.token, { name: 'Omar', role: 'EDITOR' });
     expect((await app.req('GET', '/api/admin/overview', { token: sa.token })).body.users).toBe(1);
   });
+
+  it('general supervisors cannot disconnect each other, only themselves and lower roles', async () => {
+    app.env.TELEGRAM_APPROVER_IDS = '111';
+    const a = await activate((await newCode(sa.token, { name: 'Smail', role: 'SUPER_ADMIN' })).body.code);
+    const b = await activate((await newCode(sa.token, { name: 'Yacin', role: 'SUPER_ADMIN' })).body.code);
+    const ed = await activate((await newCode(sa.token, { name: 'Karim', role: 'EDITOR' })).body.code);
+    const list = await app.req('GET', '/api/admin/devices', { token: a.body.tokens.accessToken });
+    const row = (n: string) => list.body.items.find((d: { full_name: string }) => d.full_name === n);
+    expect(row('Smail')).toMatchObject({ current: true, canRevoke: true });
+    expect(row('Yacin')).toMatchObject({ current: false, canRevoke: false });
+    expect(row('Karim')).toMatchObject({ canRevoke: true });
+    const r = await app.req('DELETE', `/api/admin/devices/${row('Yacin').id}`, { token: a.body.tokens.accessToken });
+    expect(r.status).toBe(403);
+    expect(r.body.error).toBe('cannot_revoke_peer_device');
+    expect((await app.req('GET', '/api/me', { token: b.body.tokens.accessToken })).status).toBe(200);
+    // Lower role: allowed, and the approvers are told who did it.
+    app.telegram.length = 0;
+    expect((await app.req('DELETE', `/api/admin/devices/${row('Karim').id}`, { token: a.body.tokens.accessToken })).status).toBe(200);
+    expect((await app.req('GET', '/api/me', { token: ed.body.tokens.accessToken })).status).toBe(401);
+    const msg = app.telegram.find((m) => m.method === 'sendMessage');
+    expect(msg?.body.chat_id).toBe(111);
+    expect(msg?.body.text).toContain('Karim');
+    expect(msg?.body.text).toContain('Smail');
+    // Own device: allowed.
+    expect((await app.req('DELETE', `/api/admin/devices/${row('Smail').id}`, { token: a.body.tokens.accessToken })).status).toBe(200);
+  });
 });

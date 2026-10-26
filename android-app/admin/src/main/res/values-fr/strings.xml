@@ -221,4 +221,6 @@ Valable une fois sous 48 h. Ne le partagez pas.</string>
     <string name="a_problem_body">texte en arabe</string>
     <string name="a_problem_link">les liens doivent commencer par https://</string>
     <string name="a_problem_options">au moins deux options</string>
+    <string name="dev_this_device">Cet appareil</string>
+    <string name="e_cannot_revoke_peer">Impossible de déconnecter l’appareil d’un responsable de même rang ou supérieur</string>
 </resources>

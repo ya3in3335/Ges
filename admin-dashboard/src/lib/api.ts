@@ -149,5 +149,6 @@ const ERRORS: Record<string, string> = {
   invalid_code: 'رمز التفعيل غير صحيح أو منتهي الصلاحية',
   invalid_name: 'الاسم يحتوي على رموز غير مسموحة',
   not_found: 'العنصر غير موجود',
+  cannot_revoke_peer_device: 'لا يمكنك فصل جهاز مشرف له نفس صفتك أو أعلى',
 };
 export const errorText = (e: unknown) => (e instanceof ApiError ? ERRORS[e.code] ?? `خطأ: ${e.code}` : 'تعذّر الاتصال بالخادم');

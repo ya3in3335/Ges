@@ -234,6 +234,10 @@ import kotlinx.serialization.Serializable
     @SerialName("user_id") val userId: String,
     @SerialName("full_name") val fullName: String,
     val role: String,
+    /** The device this app is running on. */
+    val current: Boolean = false,
+    /** Only own devices and those of lower roles can be disconnected. */
+    val canRevoke: Boolean = true,
 )
 @Serializable data class DeviceList(val items: List<DeviceRow>)
 

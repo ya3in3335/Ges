@@ -64,6 +64,7 @@ fun adminError(e: AppError): String {
         "cannot_assign_role" -> R.string.e_cannot_assign_role
         "cannot_modify_self" -> R.string.e_cannot_modify_self
         "cannot_modify_higher_role" -> R.string.e_cannot_modify_higher
+        "cannot_revoke_peer_device" -> R.string.e_cannot_revoke_peer
         "last_super_admin" -> R.string.e_last_super_admin
         "r2_not_configured" -> R.string.m_r2_off
         "unsupported_file_type" -> R.string.e_unsupported_file

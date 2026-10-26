@@ -115,9 +115,12 @@ fun DevicesScreen(back: () -> Unit, myRole: String, vm: DevicesVm = hiltViewMode
                                 Text(d.fullName, style = MaterialTheme.typography.titleSmall)
                                 Text(d.deviceName ?: "—", style = MaterialTheme.typography.bodySmall.copy(textDirection = TextDirection.Ltr), color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(stringResource(R.string.dev_last_used, formatDateTime(d.lastUsedAt ?: d.createdAt)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                                Tag(roleLabel(d.role))
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Tag(roleLabel(d.role))
+                                    if (d.current) Tag(stringResource(R.string.dev_this_device), MaterialTheme.colorScheme.primaryContainer)
+                                }
                             }
-                            OutlinedButton(onClick = { revoking = d }) { Text(stringResource(R.string.dev_revoke), color = MaterialTheme.colorScheme.error) }
+                            if (d.canRevoke) OutlinedButton(onClick = { revoking = d }) { Text(stringResource(R.string.dev_revoke), color = MaterialTheme.colorScheme.error) }
                         }
                     }
                 }

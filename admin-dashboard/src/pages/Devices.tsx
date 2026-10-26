@@ -4,7 +4,7 @@ import { api, atLeast, errorText, type Role } from '../lib/api';
 import { dt, ROLE_LABELS } from '../lib/format';
 import { Badge, Field, Modal, Page, State, useLoad } from '../lib/ui';
 
-interface Device { id: string; device_name: string | null; created_at: number; last_used_at: number | null; user_id: string; full_name: string; role: Role }
+interface Device { id: string; device_name: string | null; created_at: number; last_used_at: number | null; user_id: string; full_name: string; role: Role; current?: boolean; canRevoke?: boolean }
 
 /** Supervisor devices (Android and Windows apps): one-time activation codes and remote disconnection. */
 export default function Devices() {
@@ -30,14 +30,14 @@ export default function Devices() {
 
   return (
     <Page title="الأجهزة المفعّلة" actions={atLeast(user?.role, 'ADMIN') && <button className="btn" onClick={() => setForm({ name: '', role: 'EDITOR' })}>+ رمز تفعيل جديد</button>}>
-      <p className="muted">كل جهاز (هاتف أو حاسوب) فُعِّل لتطبيق الإدارة. الفصل يوقف الجهاز فوراً.</p>
+      <p className="muted">كل جهاز (هاتف أو حاسوب) فُعِّل لتطبيق الإدارة. الفصل يوقف الجهاز فوراً ويُبلَّغ به مسؤولو البوت. يمكنك فصل جهازك أو أجهزة من هم أقل منك صفةً فقط.</p>
       <State loading={loading && !data} error={error} empty={data?.items.length === 0} onRetry={reload} />
       {data && data.items.length > 0 && <div className="table-wrap"><table>
         <thead><tr><th>الشخص</th><th>الصفة</th><th>الجهاز</th><th>فُعِّل في</th><th>آخر استعمال</th><th /></tr></thead>
         <tbody>{data.items.map((d) => <tr key={d.id}>
           <td>{d.full_name}</td><td><Badge tone={d.role === 'SUPER_ADMIN' ? 'warn' : 'neutral'}>{ROLE_LABELS[d.role]}</Badge></td>
-          <td dir="auto">{d.device_name ?? '—'}</td><td>{dt(d.created_at)}</td><td>{dt(d.last_used_at)}</td>
-          <td className="row-actions"><button className="btn ghost danger" onClick={() => revoke(d)}>فصل</button></td>
+          <td dir="auto">{d.device_name ?? '—'} {d.current && <Badge tone="ok">هذا الجهاز</Badge>}</td><td>{dt(d.created_at)}</td><td>{dt(d.last_used_at)}</td>
+          <td className="row-actions">{d.canRevoke !== false && <button className="btn ghost danger" onClick={() => revoke(d)}>فصل</button>}</td>
         </tr>)}</tbody></table></div>}
 
       {form && <Modal title="رمز تفعيل لمشرف جديد" onClose={() => setForm(null)}>

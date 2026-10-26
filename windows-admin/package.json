@@ -2,7 +2,7 @@
   "name": "association-admin-desktop",
   "productName": "Association Admin",
   "description": "تطبيق إدارة الجمعية لويندوز",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "main": "src/main.js",
   "author": "Association",

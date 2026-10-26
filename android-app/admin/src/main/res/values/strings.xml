@@ -221,4 +221,6 @@
     <string name="a_problem_body">نص الخبر بالعربية</string>
     <string name="a_problem_link">الروابط يجب أن تبدأ بـ https://</string>
     <string name="a_problem_options">خياران على الأقل</string>
+    <string name="dev_this_device">هذا الجهاز</string>
+    <string name="e_cannot_revoke_peer">لا يمكنك فصل جهاز مشرف له نفس صفتك أو أعلى</string>
 </resources>

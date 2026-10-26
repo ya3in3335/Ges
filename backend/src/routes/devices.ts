@@ -3,7 +3,9 @@ import type { Ctx, Role } from '../env';
 import { badRequest, forbidden, HttpError, json, notFound, readJson } from '../lib/http';
 import { randomDigits, sha256Hex, uuid } from '../lib/crypto';
 import { rateLimit } from '../lib/ratelimit';
-import { canAssignRole, requireRole } from '../lib/rbac';
+import { canAssignRole, RANK, requireRole } from '../lib/rbac';
+import { sendMessage } from '../services/telegramApi';
+import { approverIds } from './deviceRequests';
 import { adminAudit } from '../lib/audit';
 import { issueTokens } from '../lib/session';
 import { publicUser, type UserRow } from './auth';
@@ -77,27 +79,49 @@ export async function activateDevice(ctx: Ctx): Promise<Response> {
 
 /** Active supervisor devices (long-lived sessions). */
 export async function listDevices(ctx: Ctx): Promise<Response> {
-  requireRole(ctx, 'ADMIN');
+  const me = requireRole(ctx, 'ADMIN');
+  const mine = await ctx.env.DB.prepare('SELECT family_id FROM auth_sessions WHERE id = ?').bind(me.sessionId).first<{ family_id: string }>();
   const rows = await ctx.env.DB.prepare(
     `SELECT s.id, s.family_id, s.device_name, s.created_at, s.last_used_at, u.id AS user_id, u.full_name, u.role
      FROM auth_sessions s JOIN users u ON u.id = s.user_id
      WHERE s.long_lived = 1 AND s.revoked_at IS NULL AND s.rotated_at IS NULL AND s.expires_at > ?
      ORDER BY s.created_at DESC LIMIT 200`,
-  ).bind(ctx.now).all();
-  return json({ items: rows.results });
+  ).bind(ctx.now).all<{ id: string; family_id: string; user_id: string; role: Role }>();
+  return json({
+    items: rows.results.map(({ family_id, ...d }) => ({
+      ...d,
+      current: family_id === mine?.family_id,
+      canRevoke: canRevokeDevice(me.id, me.role, d.user_id, d.role),
+    })),
+  });
+}
+
+/**
+ * A supervisor may disconnect their own devices, or devices of people with a lower role.
+ * Peers (e.g. two general supervisors) cannot disconnect each other; demoting someone in Users
+ * remains possible and also ends their sessions.
+ */
+export function canRevokeDevice(actorId: string, actorRole: Role, ownerId: string, ownerRole: Role): boolean {
+  return actorId === ownerId || RANK[ownerRole] < RANK[actorRole];
 }
 
 /** Disconnects a device immediately (its whole refresh-token family is revoked). */
 export async function revokeDevice(ctx: Ctx): Promise<Response> {
   const me = requireRole(ctx, 'ADMIN');
   const s = await ctx.env.DB.prepare(
-    `SELECT s.family_id, u.id AS user_id, u.role FROM auth_sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.long_lived = 1`,
-  ).bind(ctx.params.id).first<{ family_id: string; user_id: string; role: Role }>();
+    `SELECT s.family_id, s.device_name, u.id AS user_id, u.role, u.full_name FROM auth_sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.long_lived = 1`,
+  ).bind(ctx.params.id).first<{ family_id: string; device_name: string | null; user_id: string; role: Role; full_name: string }>();
   if (!s) throw notFound();
-  if (s.user_id !== me.id && !canAssignRole(me.role, s.role, s.role)) throw forbidden('cannot_modify_higher_role');
+  if (!canRevokeDevice(me.id, me.role, s.user_id, s.role)) throw forbidden('cannot_revoke_peer_device');
   await ctx.env.DB.batch([
     ctx.env.DB.prepare('UPDATE auth_sessions SET revoked_at = ? WHERE family_id = ? AND revoked_at IS NULL').bind(ctx.now, s.family_id),
     adminAudit(ctx, 'revoke_device', 'session', ctx.params.id!),
   ]);
+  // Never silent: the bot's approvers are told who disconnected which device.
+  if (s.user_id !== me.id) {
+    const who = await ctx.env.DB.prepare('SELECT full_name FROM users WHERE id = ?').bind(me.id).first<{ full_name: string }>();
+    const text = `⚠️ فصل جهاز إدارة\nالجهاز: ${s.device_name ?? '—'} (${s.full_name})\nبواسطة: ${who?.full_name ?? '—'}`;
+    ctx.waitUntil(Promise.all(approverIds(ctx).map((chat) => sendMessage(ctx, chat, text))));
+  }
   return json({ ok: true });
 }
