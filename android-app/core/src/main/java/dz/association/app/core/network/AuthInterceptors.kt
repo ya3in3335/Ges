@@ -10,54 +10,80 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.Route
+import okio.ByteString.Companion.decodeBase64
 
-/** Adds the bearer token to API requests. */
-class AuthInterceptor(private val session: SessionManager) : Interceptor {
+/**
+ * Adds the bearer token to API requests, renewing it first when it has expired. Public endpoints
+ * (poll details, home…) answer an expired token as if the visitor were anonymous rather than with
+ * 401, so waiting for a 401 would leave a signed-in member looking "not eligible" to vote.
+ */
+class AuthInterceptor(private val session: SessionManager, private val refresher: TokenRefresher? = null) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = session.accessToken
         val req = chain.request()
-        if (token == null || req.header("Authorization") != null) return chain.proceed(req)
+        if (req.header("Authorization") != null || req.url.encodedPath.contains("/api/auth/")) return chain.proceed(req)
+        var token = session.accessToken
+        if (refresher != null && session.refreshToken != null && (token == null || isExpired(token))) {
+            token = refresher.refresh(failedToken = token) ?: session.accessToken
+        }
+        if (token == null) return chain.proceed(req)
         return chain.proceed(req.newBuilder().header("Authorization", "Bearer $token").build())
+    }
+
+    companion object {
+        /** Reads the JWT `exp` claim; renews 30 s early to absorb clock drift and request time. */
+        fun isExpired(jwt: String, nowMs: Long = System.currentTimeMillis()): Boolean {
+            val payload = jwt.split('.').getOrNull(1) ?: return true
+            val exp = runCatching {
+                val text = payload.decodeBase64()!!.utf8()
+                Regex("\"exp\"\\s*:\\s*(\\d+)").find(text)!!.groupValues[1].toLong()
+            }.getOrNull() ?: return true
+            return exp * 1000 - 30_000 <= nowMs
+        }
     }
 }
 
-/**
- * On 401, rotates the refresh token once (serialised so parallel requests share one refresh).
- * If refresh fails the session is cleared and the user must sign in again.
- */
-class TokenAuthenticator(
+/** Rotates the refresh token once at a time (parallel requests share one refresh). */
+class TokenRefresher(
     private val session: SessionManager,
     private val baseUrl: String,
     private val json: Json,
-    private val refreshClient: () -> OkHttpClient,
-) : Authenticator {
+    private val client: () -> OkHttpClient,
+) {
     private val lock = Any()
 
+    /**
+     * Returns a fresh access token, or null when it could not be renewed. The session is cleared
+     * only when the server rejects the refresh token, never on a network failure.
+     */
+    fun refresh(failedToken: String?): String? = synchronized(lock) {
+        val current = session.accessToken
+        if (current != null && current != failedToken && !AuthInterceptor.isExpired(current)) return current
+        val refresh = session.refreshToken ?: return null
+        val body = json.encodeToString(RefreshRequest.serializer(), RefreshRequest(refresh))
+            .toRequestBody("application/json".toMediaType())
+        val res = runCatching {
+            client().newCall(Request.Builder().url(baseUrl + "api/auth/refresh").post(body).build()).execute()
+        }.getOrNull() ?: return null
+        res.use {
+            if (!it.isSuccessful) {
+                if (it.code == 401) session.clear()
+                return null
+            }
+            val tokens = json.decodeFromString(RefreshResponse.serializer(), it.body!!.string()).tokens
+            session.saveTokens(tokens)
+            tokens.accessToken
+        }
+    }
+}
+
+/** On 401, renews the access token once and repeats the request; if renewal fails the request fails. */
+class TokenAuthenticator(private val refresher: TokenRefresher) : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
         if (response.request.url.encodedPath.contains("/api/auth/")) return null
         if (responseCount(response) >= 2) return null
         val failedToken = response.request.header("Authorization")?.removePrefix("Bearer ")
-        synchronized(lock) {
-            val current = session.accessToken
-            if (current != null && current != failedToken) {
-                return response.request.newBuilder().header("Authorization", "Bearer $current").build()
-            }
-            val refresh = session.refreshToken ?: return null
-            val body = json.encodeToString(RefreshRequest.serializer(), RefreshRequest(refresh))
-                .toRequestBody("application/json".toMediaType())
-            val res = runCatching {
-                refreshClient().newCall(Request.Builder().url(baseUrl + "api/auth/refresh").post(body).build()).execute()
-            }.getOrNull() ?: return null // network error: keep the session, fail this request
-            res.use {
-                if (!it.isSuccessful) {
-                    if (it.code == 401) session.clear()
-                    return null
-                }
-                val tokens = json.decodeFromString(RefreshResponse.serializer(), it.body!!.string()).tokens
-                session.saveTokens(tokens)
-                return response.request.newBuilder().header("Authorization", "Bearer ${tokens.accessToken}").build()
-            }
-        }
+        val token = refresher.refresh(failedToken) ?: return null
+        return response.request.newBuilder().header("Authorization", "Bearer $token").build()
     }
 
     private fun responseCount(r: Response): Int {

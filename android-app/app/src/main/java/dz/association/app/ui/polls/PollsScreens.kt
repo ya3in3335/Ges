@@ -235,11 +235,15 @@ fun PollDetailScreen(back: () -> Unit, nav: (String) -> Unit, vm: PollDetailView
 
                         if (p.state == "active" && !d.hasVoted) {
                             when {
-                                !vm.signedIn -> { Hint(stringResource(R.string.poll_need_login)); PrimaryButton(stringResource(R.string.login), { nav(Routes.LOGIN) }) }
+                                !vm.signedIn || d.ineligibleReason == "login_required" -> { Hint(stringResource(R.string.poll_need_login)); PrimaryButton(stringResource(R.string.login), { nav(Routes.LOGIN) }) }
                                 d.ineligibleReason == "phone_not_verified" -> { Hint(stringResource(R.string.poll_need_verify)); PrimaryButton(stringResource(R.string.verify_phone_telegram), { nav(Routes.VERIFY) }) }
                                 d.ineligibleReason == "not_on_member_list" -> Hint(stringResource(R.string.poll_not_member))
                                 !online -> Hint(stringResource(R.string.poll_offline))
-                                else -> PrimaryButton(stringResource(R.string.poll_vote), { confirm = true }, Modifier.testTag("vote_button"), enabled = selected != null, loading = voting)
+                                !d.eligible -> Hint(stringResource(R.string.poll_not_eligible))
+                                else -> {
+                                    if (selected == null) Hint(stringResource(R.string.poll_pick_option))
+                                    PrimaryButton(stringResource(R.string.poll_vote), { confirm = true }, Modifier.testTag("vote_button"), enabled = selected != null, loading = voting)
+                                }
                             }
                         }
                     }

@@ -62,9 +62,10 @@ object NetworkModule {
 
     @Provides @Singleton
     fun okHttp(@Named("plain") base: OkHttpClient, session: SessionManager, json: Json): OkHttpClient {
+        val refresher = TokenRefresher(session, BuildConfig.API_BASE_URL, json) { base }
         val builder = base.newBuilder()
-            .addInterceptor(AuthInterceptor(session))
-            .authenticator(TokenAuthenticator(session, BuildConfig.API_BASE_URL, json) { base })
+            .addInterceptor(AuthInterceptor(session, refresher))
+            .authenticator(TokenAuthenticator(refresher))
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(
                 okhttp3.logging.HttpLoggingInterceptor().apply {

@@ -86,6 +86,8 @@
     <string name="poll_total_votes">Total des votes : %1$d</string>
     <string name="poll_anonymous">Vote anonyme</string>
     <string name="poll_members_only">Réservé aux membres approuvés</string>
+    <string name="poll_pick_option">Choisissez d’abord une option ci-dessus, puis appuyez sur « Confirmer mon vote »</string>
+    <string name="poll_not_eligible">Votre compte n’est pas éligible à ce vote</string>
     <string name="poll_need_login">Connectez-vous pour voter</string>
     <string name="poll_need_verify">Confirmez votre numéro avant de voter</string>
     <string name="poll_not_member">Vous ne figurez pas sur la liste des membres éligibles</string>

@@ -86,6 +86,8 @@
     <string name="poll_total_votes">إجمالي الأصوات: %1$d</string>
     <string name="poll_anonymous">تصويت سري</string>
     <string name="poll_members_only">مخصّص للأعضاء المعتمدين</string>
+    <string name="poll_pick_option">اختر أحد الخيارات أعلاه أولاً، ثم اضغط «تأكيد التصويت»</string>
+    <string name="poll_not_eligible">حسابك غير مؤهل للمشاركة في هذا التصويت</string>
     <string name="poll_need_login">سجّل الدخول للمشاركة في التصويت</string>
     <string name="poll_need_verify">يجب تأكيد رقم هاتفك قبل التصويت</string>
     <string name="poll_not_member">أنت غير مدرج في قائمة الأعضاء المؤهلين لهذا التصويت</string>
