@@ -13,8 +13,6 @@ PUBLIC_BASE_URL = "https://association-api.yacincianai31.workers.dev" # used for
 ACCESS_TOKEN_TTL_SECONDS = "900"
 REFRESH_TOKEN_TTL_DAYS = "30"
 VERIFICATION_TTL_SECONDS = "600"
-EMAIL_FROM = ""                     # sender address (verified in Brevo, or on your Resend domain)
-EMAIL_FROM_NAME = ""
 
 [[d1_databases]]
 binding = "DB"
@@ -39,5 +37,6 @@ crons = ["*/10 * * * *"]
 #   TELEGRAM_ADMIN_CHANNEL_ID  e.g. -1001234567890 (bot must be channel admin with post permission)
 #   FCM_SERVICE_ACCOUNT_JSON   optional, Firebase service-account JSON for push delivery
 #   SMTP_USER / SMTP_PASSWORD  optional, Gmail address + app password → email verification / reset e-mails
+#   EMAIL_FROM / EMAIL_FROM_NAME  sender address (verified in Brevo) and display name
 #   BREVO_API_KEY              optional, enables email verification / reset e-mails (free tier, no domain needed)
 #   RESEND_API_KEY             optional alternative to Brevo (requires your own domain)
