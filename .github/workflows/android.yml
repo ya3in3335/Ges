@@ -26,9 +26,10 @@ defaults:
     working-directory: android-app
 
 env:
-  # Public build configuration from repository *variables* (Settings → Secrets and variables → Actions → Variables).
-  API_BASE_URL: ${{ vars.API_BASE_URL || 'https://api.example.invalid/' }}
-  API_FALLBACK_URLS: ${{ vars.API_FALLBACK_URLS }}
+  # Public build configuration from repository *variables* (Settings → Secrets and variables → Actions → Variables);
+  # without them the deployed API addresses are used (they are public, not secrets).
+  API_BASE_URL: ${{ vars.API_BASE_URL || 'https://association-api.yacincianai31.workers.dev/' }}
+  API_FALLBACK_URLS: ${{ vars.API_FALLBACK_URLS || 'https://association-gateway.pages.dev/' }}
   FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
   FIREBASE_APP_ID_DEBUG: ${{ vars.FIREBASE_APP_ID_DEBUG }}
   FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
@@ -46,6 +47,9 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+        with:
+          # The legacy "tools" package (the action's default) no longer exists in the SDK repository.
+          packages: platform-tools
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests (JVM + Robolectric)
         run: ./gradlew --stacktrace :app:testDebugUnitTest :admin:testDebugUnitTest :stats:testDebugUnitTest :statsadmin:testDebugUnitTest :statsmember:testDebugUnitTest
@@ -106,6 +110,9 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@v3
+        with:
+          # The legacy "tools" package (the action's default) no longer exists in the SDK repository.
+          packages: platform-tools
       - uses: gradle/actions/setup-gradle@v4
       - name: Restore signing keystore from secrets
         env:
