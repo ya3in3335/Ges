@@ -54,9 +54,18 @@ interface StatsApi {
     @PATCH("api/stats/admin/registrations/{id}") suspend fun updateRegistration(@Path("id") id: String, @Body body: RegistrationPatch): RegistrationResponse
     @POST("api/stats/admin/checkin") suspend fun checkin(@Body body: CheckinRequest): RegistrationResponse
     @GET("api/stats/admin/staff") suspend fun staff(): StaffList
-    @POST("api/stats/admin/staff") suspend fun grantStaff(@Body body: GrantRequest): OkResponse
     @DELETE("api/stats/admin/staff/{userId}") suspend fun revokeStaff(@Path("userId") userId: String): OkResponse
     @GET("api/stats/admin/audit") suspend fun audit(): AuditList
+    @GET("api/stats/admin/users") suspend fun users(
+        @Query("q") query: String? = null,
+        @Query("role") role: String? = null,
+        @Query("staff") staff: Int? = null,
+        @Query("page") page: Int = 1,
+    ): UserList
+
+    // Census admin app activation, approved in the Telegram bot (same mechanism as the supervisors' app).
+    @POST("api/auth/device-requests") suspend fun requestActivation(@Body body: ActivationRequest): ActivationCreated
+    @GET("api/auth/device-requests/{id}") suspend fun pollActivation(@Path("id") id: String, @retrofit2.http.Header("x-request-secret") secret: String): ActivationStatus
 }
 
 @Module

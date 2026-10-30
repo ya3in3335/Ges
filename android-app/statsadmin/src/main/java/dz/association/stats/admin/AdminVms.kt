@@ -10,7 +10,6 @@ import dz.association.stats.data.AuditItem
 import dz.association.stats.data.CheckinRequest
 import dz.association.stats.data.Dashboard
 import dz.association.stats.data.Geo
-import dz.association.stats.data.GrantRequest
 import dz.association.stats.data.Meeting
 import dz.association.stats.data.MeetingPatch
 import dz.association.stats.data.MeetingRequest
@@ -297,19 +296,9 @@ class RecordVm @Inject constructor(private val api: StatsApi, geo: Geo, private 
 
 @HiltViewModel
 class StaffVm @Inject constructor(private val api: StatsApi, poller: SyncPoller) : LiveVm<StaffList>(poller) {
-    val busy = MutableStateFlow(false)
     val actionError = MutableStateFlow<AppError?>(null)
     init { reload() }
     override suspend fun fetch(): Result<StaffList> = apiCall { api.staff() }
-
-    fun grant(identifier: String, level: String, onDone: () -> Unit) = viewModelScope.launch {
-        busy.value = true; actionError.value = null
-        when (val r = apiCall { api.grantStaff(GrantRequest(identifier.trim(), level)) }) {
-            is Result.Ok -> { reload(silent = true); onDone() }
-            is Result.Err -> actionError.value = r.error
-        }
-        busy.value = false
-    }
 
     fun revoke(userId: String) = viewModelScope.launch {
         when (val r = apiCall { api.revokeStaff(userId) }) {
@@ -323,4 +312,29 @@ class StaffVm @Inject constructor(private val api: StatsApi, poller: SyncPoller)
 class AuditVm @Inject constructor(private val api: StatsApi, poller: SyncPoller) : LiveVm<List<AuditItem>>(poller) {
     init { reload() }
     override suspend fun fetch(): Result<List<AuditItem>> = apiCall { api.audit().items }
+}
+
+@HiltViewModel
+class UsersVm @Inject constructor(private val api: StatsApi) : ViewModel() {
+    val items = MutableStateFlow<List<dz.association.stats.data.UserRow>>(emptyList())
+    val total = MutableStateFlow(0)
+    val hasMore = MutableStateFlow(false)
+    val loading = MutableStateFlow(false)
+    val error = MutableStateFlow<AppError?>(null)
+    val query = MutableStateFlow("")
+    val role = MutableStateFlow<String?>(null)
+    val staff = MutableStateFlow(false)
+    private var page = 1
+
+    init { load(reset = true) }
+
+    fun load(reset: Boolean) = viewModelScope.launch {
+        if (reset) page = 1 else page++
+        loading.value = true; error.value = null
+        when (val r = apiCall { api.users(query.value.trim().ifBlank { null }, role.value, if (staff.value) 1 else null, page) }) {
+            is Result.Ok -> { items.value = if (reset) r.value.items else items.value + r.value.items; total.value = r.value.total; hasMore.value = r.value.hasMore }
+            is Result.Err -> error.value = r.error
+        }
+        loading.value = false
+    }
 }

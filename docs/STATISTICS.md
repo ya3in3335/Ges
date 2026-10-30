@@ -18,12 +18,23 @@ Shared code (census API, form, wilayas/communes, charts, QR, sign-in screens, th
 | --- | --- | --- | --- |
 | Register self, see own card / history | ✓ | ✓ | ✓ |
 | Dashboard, meetings list, register people, confirm attendance | | ✓ | ✓ |
-| Create / edit / close meetings, correct records, export, audit log | | | ✓ |
+| Create / edit / close meetings, correct records, export, audit log, users database, census team | | | ✓ |
 
-- **Manager:** every association `ADMIN` / `SUPER_ADMIN`, plus accounts appointed as managers.
-- **Officer:** accounts appointed as officers.
-- Appointments are made in the admin app (Dashboard → menu → census team) by an association `ADMIN`
-  or `SUPER_ADMIN`. They are stored in `stats_staff`.
+- **No e-mail or password in the admin app.**
+  - It sends an activation request; an approver (`TELEGRAM_APPROVER_IDS`) accepts it in the Telegram
+    bot and chooses *موظف إحصاء* (officer) or *مسؤول إحصاء* (manager).
+  - The device then gets a long-lived, revocable session for a census-only account (no password,
+    association role `USER`).
+  - The server opens census administration **only** to such bot-activated sessions. An e-mail /
+    password sign-in never opens it, even for an `ADMIN`.
+- **Managers and officers:**
+  - An association `ADMIN` / `SUPER_ADMIN` on an activated device counts as a manager.
+  - Others get their level from `stats_staff`.
+- **Removing someone from the team** (managers, from the census team screen) disconnects their devices
+  and closes the census-only account.
+- **Users database** (managers only, every view logged): the association's accounts.
+  - Contact details, role and verification.
+  - Census profile and participation counts.
 
 ## Data (migration `0005_statistics.sql`, additive only)
 

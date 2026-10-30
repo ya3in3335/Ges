@@ -257,26 +257,15 @@ private fun Field(label: String, value: String) {
 @Composable
 fun StaffScreen(back: () -> Unit, vm: StaffVm = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val busy by vm.busy.collectAsStateWithLifecycle()
     val actionError by vm.actionError.collectAsStateWithLifecycle()
-    var identifier by rememberSaveable { mutableStateOf("") }
-    var level by rememberSaveable { mutableStateOf("officer") }
     var removing by remember { mutableStateOf<String?>(null) }
     Scaffold(topBar = { AppTopBar(stringResource(R.string.st_staff), back) }) { pad ->
         when (val s = state) {
             UiState.Loading -> Loading(Modifier.padding(pad))
             is UiState.Error -> Box(Modifier.padding(pad).padding(16.dp)) { ErrorBox(s.error) { vm.reload() } }
             is UiState.Success -> LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (s.data.canManage) item {
-                    StatsCard {
-                        SectionTitle(stringResource(R.string.st_add_staff))
-                        OutlinedTextField(identifier, { identifier = it.take(254) }, label = { Text(stringResource(R.string.st_staff_identifier)) }, singleLine = true,
-                            shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth())
-                        ChoiceChips(listOf("officer", "manager"), level, { stringResource(if (it == "manager") R.string.st_level_manager else R.string.st_level_officer) }, { level = it })
-                        actionError?.let { ErrorBox(it) }
-                        PrimaryButton(stringResource(R.string.st_add_staff), { vm.grant(identifier, level) { identifier = "" } }, enabled = identifier.trim().length >= 3, loading = busy)
-                    }
-                }
+                item { Text(stringResource(R.string.st_staff_hint), color = StatsColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
+                actionError?.let { e -> item { ErrorBox(e) } }
                 if (s.data.items.isEmpty()) item { EmptyNote(stringResource(R.string.st_no_data)) }
                 items(s.data.items, key = { it.userId }) { m ->
                     StatsCard {

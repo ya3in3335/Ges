@@ -6,7 +6,6 @@ import { DZ_GEO } from '../data/dzGeo';
 import { adminAudit } from '../lib/audit';
 import { b64url, hmacSha256, randomToken, timingSafeEqual, uuid } from '../lib/crypto';
 import { badRequest, conflict, forbidden, HttpError, json, notFound, readJson } from '../lib/http';
-import { normalizeAlgerianPhone } from '../lib/phone';
 import { rateLimit } from '../lib/ratelimit';
 import { requireUser, roleAtLeast } from '../lib/rbac';
 
@@ -21,11 +20,18 @@ export const communeInWilaya = (communeId: number, wilayaCode: number) => COMMUN
 
 export type StaffLevel = 'manager' | 'officer';
 
+/**
+ * Census administration needs a device activated from the Telegram bot (a long-lived session, see
+ * deviceRequests.ts): an e-mail / password sign-in alone never opens it.
+ */
 export async function staffLevel(ctx: Ctx): Promise<StaffLevel | null> {
   const u = requireUser(ctx);
+  const row = await ctx.env.DB.prepare(
+    `SELECT s.long_lived, st.level FROM auth_sessions s LEFT JOIN stats_staff st ON st.user_id = s.user_id WHERE s.id = ? AND s.user_id = ?`,
+  ).bind(u.sessionId, u.id).first<{ long_lived: number; level: StaffLevel | null }>();
+  if (!row?.long_lived) return null;
   if (roleAtLeast(u.role, 'ADMIN')) return 'manager';
-  const row = await ctx.env.DB.prepare('SELECT level FROM stats_staff WHERE user_id = ?').bind(u.id).first<{ level: StaffLevel }>();
-  return row?.level ?? null;
+  return row.level ?? null;
 }
 
 async function requireStaff(ctx: Ctx): Promise<StaffLevel> {
@@ -631,46 +637,80 @@ export async function adminCheckin(ctx: Ctx): Promise<Response> {
 // ───────────── Staff & audit ─────────────
 
 export async function adminListStaff(ctx: Ctx): Promise<Response> {
-  await requireStaff(ctx);
+  const level = await requireStaff(ctx);
   const { results } = await ctx.env.DB.prepare(
     `SELECT u.id, u.full_name, u.email, u.role, s.level, s.created_at FROM stats_staff s JOIN users u ON u.id = s.user_id
      WHERE u.status = 'active' ORDER BY s.created_at DESC`,
   ).all<{ id: string; full_name: string; email: string; role: string; level: StaffLevel; created_at: number }>();
   return json({
     items: (results ?? []).map((s) => ({ userId: s.id, fullName: s.full_name, email: s.email, role: s.role, level: s.level, grantedAt: s.created_at })),
-    canManage: roleAtLeast(ctx.user!.role, 'ADMIN'),
+    canManage: level === 'manager',
   });
 }
 
-const grantSchema = z.object({ identifier: z.string().trim().min(3).max(254), level: z.enum(['manager', 'officer']) });
-
-/** Association ADMIN / SUPER_ADMIN accounts appoint census staff. */
-export async function adminGrantStaff(ctx: Ctx): Promise<Response> {
-  const u = requireUser(ctx);
-  if (!roleAtLeast(u.role, 'ADMIN')) throw forbidden('insufficient_role');
-  const b = await readJson(ctx.req, grantSchema);
-  const phone = normalizeAlgerianPhone(b.identifier);
-  const target = await ctx.env.DB.prepare(
-    phone ? `SELECT id, full_name FROM users WHERE phone_e164 = ? AND status = 'active'` : `SELECT id, full_name FROM users WHERE email = ? AND status = 'active'`,
-  ).bind(phone ?? b.identifier.toLowerCase()).first<{ id: string; full_name: string }>();
-  if (!target) throw notFound('user_not_found');
-  await ctx.env.DB.batch([
-    ctx.env.DB.prepare(
-      `INSERT INTO stats_staff (user_id, level, granted_by, created_at) VALUES (?, ?, ?, ?)
-       ON CONFLICT(user_id) DO UPDATE SET level = excluded.level, granted_by = excluded.granted_by`,
-    ).bind(target.id, b.level, u.id, ctx.now),
-    adminAudit(ctx, 'stats.staff.grant', 'stats_staff', target.id, { level: b.level }),
+/**
+ * Removes someone from the census team (managers only, never themselves). Their census devices are
+ * disconnected at once; a census-only account (created by the bot approval) is closed.
+ */
+export async function adminRevokeStaff(ctx: Ctx): Promise<Response> {
+  await requireManager(ctx);
+  const target = ctx.params.userId!;
+  if (target === ctx.user!.id) throw conflict('cannot_remove_self');
+  const db = ctx.env.DB;
+  const res = await db.batch([
+    db.prepare('DELETE FROM stats_staff WHERE user_id = ?').bind(target),
+    db.prepare(`UPDATE auth_sessions SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL AND (SELECT is_staff_only FROM users WHERE id = ?) = 1`).bind(ctx.now, target, target),
+    db.prepare(`UPDATE users SET status = 'suspended', updated_at = ? WHERE id = ? AND is_staff_only = 1 AND role = 'USER'`).bind(ctx.now, target),
+    adminAudit(ctx, 'stats.staff.revoke', 'stats_staff', target, null),
   ]);
-  return json({ ok: true, userId: target.id, fullName: target.full_name, level: b.level }, 201);
+  if (!res[0]?.meta.changes) throw notFound();
+  return json({ ok: true });
 }
 
-export async function adminRevokeStaff(ctx: Ctx): Promise<Response> {
-  const u = requireUser(ctx);
-  if (!roleAtLeast(u.role, 'ADMIN')) throw forbidden('insufficient_role');
-  const r = await ctx.env.DB.prepare('DELETE FROM stats_staff WHERE user_id = ?').bind(ctx.params.userId).run();
-  if (!r.meta.changes) throw notFound();
-  await adminAudit(ctx, 'stats.staff.revoke', 'stats_staff', ctx.params.userId!, null).run();
-  return json({ ok: true });
+/** The association's accounts (managers only): who is a member, how to reach them, census participation. */
+export async function adminListUsers(ctx: Ctx): Promise<Response> {
+  await requireManager(ctx);
+  const p = ctx.url.searchParams;
+  const page = Math.max(1, parseInt(p.get('page') ?? '1', 10) || 1);
+  const size = Math.min(100, Math.max(1, parseInt(p.get('pageSize') ?? '50', 10) || 50));
+  const where = [`u.status <> 'deleted'`];
+  const args: unknown[] = [];
+  const text = (p.get('q') ?? '').trim().slice(0, 80);
+  if (text) {
+    where.push(`(u.full_name LIKE ? ESCAPE '\\' OR u.email LIKE ? ESCAPE '\\' OR u.phone_e164 LIKE ? ESCAPE '\\')`);
+    const like = `%${escapeLike(text)}%`;
+    args.push(like, like, like);
+  }
+  const role = p.get('role');
+  if (role && ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'VOLUNTEER', 'USER'].includes(role)) { where.push('u.role = ?'); args.push(role); }
+  if (p.get('staff') !== '1') where.push('u.is_staff_only = 0');
+  const sqlWhere = `WHERE ${where.join(' AND ')}`;
+  const [rows, count] = await Promise.all([
+    ctx.env.DB.prepare(
+      `SELECT u.id, u.full_name, u.email, u.phone_e164, u.role, u.status, u.email_verified_at, u.phone_verified_at, u.is_staff_only, u.created_at,
+         (SELECT COUNT(*) FROM stats_registrations r WHERE r.user_id = u.id AND r.status <> 'cancelled') AS regs,
+         (SELECT COUNT(*) FROM stats_registrations r WHERE r.user_id = u.id AND r.status IN ('present','late')) AS attended,
+         p.wilaya_code, p.commune_id, p.birth_date, p.marital_status, p.gender
+       FROM users u LEFT JOIN member_profiles p ON p.user_id = u.id ${sqlWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`,
+    ).bind(...args, size + 1, (page - 1) * size).all<{
+      id: string; full_name: string; email: string; phone_e164: string; role: string; status: string; email_verified_at: number | null;
+      phone_verified_at: number | null; is_staff_only: number; created_at: number; regs: number; attended: number;
+      wilaya_code: number | null; commune_id: number | null; birth_date: string | null; marital_status: string | null; gender: string | null;
+    }>(),
+    ctx.env.DB.prepare(`SELECT COUNT(*) AS n FROM users u ${sqlWhere}`).bind(...args).first<{ n: number }>(),
+  ]);
+  const items = rows.results ?? [];
+  if (page === 1 && !text) await adminAudit(ctx, 'stats.users.view', 'user', null, { role: role ?? null }).run();
+  return json({
+    items: items.slice(0, size).map((u) => ({
+      id: u.id, fullName: u.full_name, email: u.is_staff_only ? null : u.email, phone: u.is_staff_only ? null : u.phone_e164, role: u.role,
+      status: u.status, emailVerified: !!u.email_verified_at, phoneVerified: !!u.phone_verified_at, staffOnly: !!u.is_staff_only, createdAt: u.created_at,
+      registrations: u.regs, attended: u.attended, gender: u.gender, birthDate: u.birth_date, maritalStatus: u.marital_status,
+      wilayaCode: u.wilaya_code, wilayaAr: u.wilaya_code ? WILAYAS.get(u.wilaya_code)?.ar ?? null : null,
+      communeAr: u.commune_id ? COMMUNES.get(u.commune_id)?.ar ?? null : null,
+    })),
+    hasMore: items.length > size, total: count?.n ?? 0, page,
+  });
 }
 
 export async function adminStatsAudit(ctx: Ctx): Promise<Response> {

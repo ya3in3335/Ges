@@ -17,7 +17,11 @@ export const approverIds = (ctx: Pick<Ctx, 'env'>): number[] =>
 const requestSchema = z.object({
   name: z.string().trim().min(2).max(60).regex(/^[\p{L}\p{M}\p{N}' .-]+$/u, 'invalid_name'),
   deviceName: z.string().trim().max(80).optional(),
+  // "stats": the census admin app; the approver picks a census level instead of an association role.
+  app: z.enum(['admin', 'stats']).default('admin'),
 });
+const STATS_LEVELS: Record<string, 'officer' | 'manager'> = { o: 'officer', m: 'manager' };
+const STATS_AR: Record<string, string> = { officer: 'موظف إحصاء', manager: 'مسؤول إحصاء' };
 
 /**
  * A supervisors' app asks to be activated. The owner receives a Telegram message with
@@ -32,12 +36,18 @@ export async function createDeviceRequest(ctx: Ctx): Promise<Response> {
   const id = uuid();
   const secret = randomToken(32);
   await ctx.env.DB.prepare(
-    `INSERT INTO device_requests (id, secret_hash, name, device_name, ip, status, created_at, expires_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)`,
-  ).bind(id, await sha256Hex(secret), b.name, b.deviceName ?? null, ctx.ip, ctx.now, ctx.now + REQUEST_TTL_MS).run();
+    `INSERT INTO device_requests (id, secret_hash, name, device_name, ip, status, kind, created_at, expires_at) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
+  ).bind(id, await sha256Hex(secret), b.name, b.deviceName ?? null, ctx.ip, b.app, ctx.now, ctx.now + REQUEST_TTL_MS).run();
 
   const date = new Date(ctx.now).toLocaleString('fr-DZ', { timeZone: 'Africa/Algiers', dateStyle: 'short', timeStyle: 'short' });
-  const text = `🔐 طلب تفعيل تطبيق المشرفين\nالاسم: ${b.name}\nالجهاز: ${b.deviceName ?? '—'}\nالتاريخ: ${date}\n\nاقبل فقط إذا كنت تعرف هذا الشخص.`;
-  const keyboard = {
+  const title = b.app === 'stats' ? 'طلب تفعيل تطبيق إدارة الإحصاء' : 'طلب تفعيل تطبيق المشرفين';
+  const text = `🔐 ${title}\nالاسم: ${b.name}\nالجهاز: ${b.deviceName ?? '—'}\nالتاريخ: ${date}\n\nاقبل فقط إذا كنت تعرف هذا الشخص.`;
+  const keyboard = b.app === 'stats' ? {
+    inline_keyboard: [
+      [{ text: '✅ موظف إحصاء', callback_data: `dr:${id}:o` }, { text: '✅ مسؤول إحصاء', callback_data: `dr:${id}:m` }],
+      [{ text: '❌ رفض', callback_data: `dr:${id}:r` }],
+    ],
+  } : {
     inline_keyboard: [
       [{ text: '✅ محرر', callback_data: `dr:${id}:e` }, { text: '✅ مشرف', callback_data: `dr:${id}:a` }],
       [{ text: '✅ مشرف عام', callback_data: `dr:${id}:s` }, { text: '❌ رفض', callback_data: `dr:${id}:r` }],
@@ -76,7 +86,7 @@ interface CallbackQuery { id: string; from: { id: number }; data?: string; messa
 /** Accept / reject buttons pressed in Telegram. Only configured approvers are obeyed. */
 export async function handleDeviceDecision(ctx: Ctx, q: CallbackQuery): Promise<void> {
   const answer = (text: string) => tgCall(ctx.env, ctx.fetch, 'answerCallbackQuery', { callback_query_id: q.id, text, show_alert: false });
-  const m = /^dr:([0-9a-f-]{36}):([easr])$/.exec(q.data ?? '');
+  const m = /^dr:([0-9a-f-]{36}):([easrom])$/.exec(q.data ?? '');
   if (!m) { await answer('—'); return; }
   if (!approverIds(ctx).includes(q.from.id)) {
     await ctx.env.DB.prepare(`INSERT INTO verification_audit (telegram_user_id, event, detail, created_at) VALUES (?, 'device_decision_denied', ?, ?)`).bind(q.from.id, m[1], ctx.now).run();
@@ -84,8 +94,10 @@ export async function handleDeviceDecision(ctx: Ctx, q: CallbackQuery): Promise<
     return;
   }
   const [, id, action] = m as unknown as [string, string, string];
-  const r = await ctx.env.DB.prepare('SELECT * FROM device_requests WHERE id = ?').bind(id).first<{ id: string; name: string; status: string; expires_at: number }>();
-  if (!r || r.status !== 'pending' || r.expires_at <= ctx.now) {
+  const r = await ctx.env.DB.prepare('SELECT * FROM device_requests WHERE id = ?').bind(id).first<{ id: string; name: string; status: string; kind: string; expires_at: number }>();
+  // A census request can only be accepted as a census level, a supervisors' request only as a role.
+  const fits = action === 'r' || (r?.kind === 'stats' ? action in STATS_LEVELS : action in ROLES);
+  if (!r || r.status !== 'pending' || r.expires_at <= ctx.now || !fits) {
     await answer('تمت معالجة هذا الطلب مسبقاً أو انتهت صلاحيته');
     return;
   }
@@ -94,6 +106,26 @@ export async function handleDeviceDecision(ctx: Ctx, q: CallbackQuery): Promise<
   if (action === 'r') {
     await db.prepare(`UPDATE device_requests SET status = 'rejected', decided_by_tg = ?, decided_at = ? WHERE id = ? AND status = 'pending'`).bind(q.from.id, ctx.now, id).run();
     result = '❌ تم الرفض';
+  } else if (r.kind === 'stats') {
+    const level = STATS_LEVELS[action]!;
+    const userId = uuid();
+    const pending = `EXISTS (SELECT 1 FROM device_requests WHERE id = ? AND status = 'pending' AND expires_at > ?)`;
+    const res = await db.batch([
+      // A census-only account (no password, ordinary association role) with its census level.
+      db.prepare(
+        `INSERT INTO users (id, full_name, email, phone_e164, password_hash, role, status, is_staff_only, created_at, updated_at)
+         SELECT ?, ?, ?, ?, '!', 'USER', 'active', 1, ?, ? WHERE ${pending}`,
+      ).bind(userId, r.name, `stats-${userId}@staff.invalid`, `staff:${userId}`, ctx.now, ctx.now, id, ctx.now),
+      db.prepare(`INSERT INTO stats_staff (user_id, level, granted_by, created_at) SELECT ?, ?, NULL, ? WHERE EXISTS (SELECT 1 FROM users WHERE id = ?)`)
+        .bind(userId, level, ctx.now, userId),
+      db.prepare(
+        `UPDATE device_requests SET status = 'approved', stats_level = ?, user_id = ?, decided_by_tg = ?, decided_at = ?
+         WHERE id = ? AND status = 'pending' AND EXISTS (SELECT 1 FROM users WHERE id = ?)`,
+      ).bind(level, userId, q.from.id, ctx.now, id, userId),
+      db.prepare(`INSERT INTO admin_audit (action, entity_type, entity_id, detail, created_at) SELECT 'stats.device_approved', 'user', ?, ?, ? WHERE EXISTS (SELECT 1 FROM users WHERE id = ?)`)
+        .bind(userId, JSON.stringify({ level, approverTelegramId: q.from.id }), ctx.now, userId),
+    ]);
+    result = res[2]?.meta.changes ? `✅ تم القبول (${STATS_AR[level]})` : 'تمت معالجة هذا الطلب مسبقاً';
   } else {
     const role = ROLES[action]!;
     const userId = uuid();

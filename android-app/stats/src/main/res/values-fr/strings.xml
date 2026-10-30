@@ -176,5 +176,24 @@
     <string name="st_action">Action</string>
     <string name="st_by">Par</string>
     <string name="st_date">Date</string>
+    <string name="st_activation_title">Activer l’application</string>
+    <string name="st_activation_body">Pas d’e-mail ni de mot de passe : envoyez une demande d’activation, le responsable l’accepte depuis le bot Telegram et choisit votre niveau.</string>
+    <string name="st_your_name">Votre nom complet</string>
+    <string name="st_send_request">Envoyer la demande</string>
+    <string name="st_waiting_approval">Demande envoyée. En attente de l’accord dans le bot… (ouverture automatique)</string>
+    <string name="st_request_rejected">La demande a été refusée</string>
+    <string name="st_request_expired">La demande a expiré, envoyez-en une nouvelle</string>
+    <string name="st_cancel_request">Annuler la demande</string>
+    <string name="st_disconnect">Déconnecter cet appareil</string>
+    <string name="st_disconnect_confirm">Cet appareil sera déconnecté et une nouvelle activation sera nécessaire. Continuer ?</string>
+    <string name="st_staff_hint">Les membres de l’équipe s’ajoutent par une demande d’activation, acceptée dans le bot avec le niveau choisi.</string>
+    <string name="st_users_db">Base des utilisateurs</string>
+    <string name="st_show_staff_accounts">Afficher les comptes d’équipe</string>
+    <string name="st_registrations_count">Recensement : %1$d inscription(s), %2$d présence(s)</string>
+    <string name="st_joined">Inscrit le %1$s</string>
+    <string name="st_verified">Vérifié</string>
+    <string name="st_not_verified">Non vérifié</string>
+    <string name="st_err_approval_not_configured">Activation par le bot non configurée</string>
+    <string name="st_err_cannot_remove_self">Vous ne pouvez pas vous retirer vous-même</string>
     <string-array name="st_months"><item>janvier</item><item>février</item><item>mars</item><item>avril</item><item>mai</item><item>juin</item><item>juillet</item><item>août</item><item>septembre</item><item>octobre</item><item>novembre</item><item>décembre</item></string-array>
 </resources>

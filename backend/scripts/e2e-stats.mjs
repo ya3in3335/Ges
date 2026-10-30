@@ -36,14 +36,17 @@ const boss = await account(1);
 const member = await account(2);
 const officer = await account(3);
 sql(`UPDATE users SET role = 'ADMIN' WHERE id = '${boss.id}'`);
+// The census admin app is activated from the Telegram bot (long-lived device session); simulated here.
+const activate = (id) => sql(`UPDATE auth_sessions SET long_lived = 1 WHERE user_id = '${id}'`);
 const adminT = await login(boss);
+activate(boss.id);
 const memberT = await login(member);
 let officerT = await login(officer);
 ok(!!adminT && !!memberT, 'members and admins sign in with the same login as the original apps');
 ok((await api('GET', '/api/stats/meetings')).status === 401, 'nothing is readable without a session');
 ok((await api('GET', '/api/stats/access', { token: memberT })).data.level === null, 'an ordinary member has no census administration access');
 ok((await api('GET', '/api/stats/admin/dashboard', { token: memberT })).status === 403, 'the server refuses admin routes to a member');
-ok((await api('GET', '/api/stats/access', { token: adminT })).data.level === 'manager', 'an ADMIN account is a census manager');
+ok((await api('GET', '/api/stats/access', { token: adminT })).data.level === 'manager', 'an ADMIN on an activated device is a census manager');
 
 console.log('\n■ Meeting (admin app)');
 const now = Date.now();
@@ -68,8 +71,10 @@ const prof = await api('GET', '/api/stats/me/profile', { token: memberT });
 ok(prof.data.profile.communeId === 1134, 'the member’s next form is prefilled');
 
 console.log('\n■ Officer registers a walk-in, then attendance (admin app → backend → member app)');
-ok((await api('POST', '/api/stats/admin/staff', { token: adminT, body: { identifier: officer.email, level: 'officer' } })).status === 201, 'the admin appoints a census officer');
+sql(`INSERT INTO stats_staff (user_id, level, created_at) VALUES ('${officer.id}', 'officer', ${Date.now()})`);
 officerT = await login(officer);
+activate(officer.id);
+ok((await api('GET', '/api/stats/access', { token: officerT })).data.level === 'officer', 'a census officer on an activated device');
 const walk = await api('POST', '/api/stats/admin/registrations', { token: officerT, body: { ...person, firstName: 'مريم', gender: 'female', meetingId } });
 ok(walk.status === 201 && walk.data.item.regNo === 2, 'the officer registers a person without an account');
 const mv0 = (await api('GET', '/api/stats/sync', { token: memberT })).data.version;
@@ -91,7 +96,8 @@ ok((await api('GET', `/api/stats/admin/registrations?all=1&meetingId=${meetingId
 const closed = await api('POST', `/api/stats/admin/meetings/${meetingId}/close`, { token: adminT });
 ok(closed.status === 200 && closed.data.report.totals.attended === 2, 'closing produces the final report');
 const audit = await api('GET', '/api/stats/admin/audit', { token: adminT });
-ok(['stats.meeting.create', 'stats.staff.grant', 'stats.export', 'stats.meeting.close'].every((a) => audit.data.items.some((x) => x.action === a)), 'administrative actions are in the audit log');
+ok((await api('GET', '/api/stats/admin/users', { token: adminT })).data.total >= 3, 'the manager sees the users database');
+ok(['stats.meeting.create', 'stats.export', 'stats.meeting.close', 'stats.users.view'].every((a) => audit.data.items.some((x) => x.action === a)), 'administrative actions are in the audit log', audit.data.items.map((x) => x.action).join(','));
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

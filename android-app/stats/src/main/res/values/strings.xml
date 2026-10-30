@@ -176,5 +176,24 @@
     <string name="st_action">العملية</string>
     <string name="st_by">بواسطة</string>
     <string name="st_date">التاريخ</string>
+    <string name="st_activation_title">تفعيل تطبيق إدارة الإحصاء</string>
+    <string name="st_activation_body">هذا التطبيق لا يستعمل البريد الإلكتروني ولا كلمة السر. اكتب اسمك وأرسل طلب تفعيل، فيقبله مسؤول الجمعية من بوت تيليغرام ويحدّد مستواك.</string>
+    <string name="st_your_name">اسمك الكامل</string>
+    <string name="st_send_request">إرسال طلب التفعيل</string>
+    <string name="st_waiting_approval">تم إرسال الطلب. انتظر موافقة المسؤول من البوت… (تُفتح الصفحة تلقائياً بعد القبول)</string>
+    <string name="st_request_rejected">رُفض طلب التفعيل</string>
+    <string name="st_request_expired">انتهت صلاحية الطلب، أرسل طلباً جديداً</string>
+    <string name="st_cancel_request">إلغاء الطلب</string>
+    <string name="st_disconnect">فصل هذا الجهاز</string>
+    <string name="st_disconnect_confirm">سيُفصل هذا الجهاز ويلزم طلب تفعيل جديد. هل تريد المتابعة؟</string>
+    <string name="st_staff_hint">يُضاف أعضاء الفريق عبر طلب تفعيل من تطبيق إدارة الإحصاء، ويقبله مسؤول الجمعية من البوت مع اختيار المستوى.</string>
+    <string name="st_users_db">قاعدة بيانات المستخدمين</string>
+    <string name="st_show_staff_accounts">إظهار حسابات الفريق</string>
+    <string name="st_registrations_count">مشاركات الإحصاء: %1$d — حضر: %2$d</string>
+    <string name="st_joined">انضم في %1$s</string>
+    <string name="st_verified">موثّق</string>
+    <string name="st_not_verified">غير موثّق</string>
+    <string name="st_err_approval_not_configured">التفعيل عبر البوت غير مُعدّ على الخادم</string>
+    <string name="st_err_cannot_remove_self">لا يمكنك إزالة نفسك من الفريق</string>
     <string-array name="st_months"><item>جانفي</item><item>فيفري</item><item>مارس</item><item>أفريل</item><item>ماي</item><item>جوان</item><item>جويلية</item><item>أوت</item><item>سبتمبر</item><item>أكتوبر</item><item>نوفمبر</item><item>ديسمبر</item></string-array>
 </resources>

@@ -183,6 +183,37 @@ import kotlinx.serialization.Serializable
 // ── Staff & audit ──
 @Serializable data class StaffMember(val userId: String, val fullName: String, val email: String, val role: String, val level: String, val grantedAt: Long)
 @Serializable data class StaffList(val items: List<StaffMember>, val canManage: Boolean = false)
-@Serializable data class GrantRequest(val identifier: String, val level: String)
 @Serializable data class AuditItem(val id: Long, val action: String, val entityType: String, val entityId: String? = null, val detail: String? = null, val at: Long, val actor: String? = null)
 @Serializable data class AuditList(val items: List<AuditItem>)
+
+// ── Users database (managers) ──
+@Serializable data class UserRow(
+    val id: String,
+    val fullName: String,
+    val email: String? = null,
+    val phone: String? = null,
+    val role: String,
+    val status: String = "active",
+    val emailVerified: Boolean = false,
+    val phoneVerified: Boolean = false,
+    val staffOnly: Boolean = false,
+    val createdAt: Long = 0,
+    val registrations: Int = 0,
+    val attended: Int = 0,
+    val gender: String? = null,
+    val birthDate: String? = null,
+    val maritalStatus: String? = null,
+    val wilayaCode: Int? = null,
+    val wilayaAr: String? = null,
+    val communeAr: String? = null,
+)
+@Serializable data class UserList(val items: List<UserRow>, val hasMore: Boolean = false, val total: Int = 0, val page: Int = 1)
+
+// ── Activation from the Telegram bot ──
+@Serializable data class ActivationRequest(val name: String, val deviceName: String? = null, val app: String = "stats")
+@Serializable data class ActivationCreated(val requestId: String, val secret: String, val expiresAt: Long)
+@Serializable data class ActivationStatus(
+    val status: String,
+    val user: dz.association.app.core.network.User? = null,
+    val tokens: dz.association.app.core.network.Tokens? = null,
+)

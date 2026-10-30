@@ -45,15 +45,11 @@ import dz.association.stats.R
 import dz.association.stats.ui.ErrorBox
 import dz.association.stats.ui.Loading
 import dz.association.stats.ui.StatsColors
-import dz.association.stats.ui.StatsForgotScreen
-import dz.association.stats.ui.StatsLoginScreen
 
 /** "manager" or "officer": hides what the server would refuse anyway. */
 val LocalLevel = staticCompositionLocalOf { "officer" }
 
 object Routes {
-    const val LOGIN = "login"
-    const val FORGOT = "forgot"
     const val DASHBOARD = "dashboard"
     const val MEETINGS = "meetings"
     const val MEETING = "meeting/{id}"
@@ -65,6 +61,7 @@ object Routes {
     const val RECORD = "record/{id}"
     const val STAFF = "staff"
     const val AUDIT = "audit"
+    const val USERS = "users"
     fun meeting(id: String) = "meeting/$id"
     fun meetingEdit(id: String? = null) = if (id == null) "meeting-edit" else "meeting-edit?id=$id"
     fun report(id: String) = "report/$id"
@@ -82,8 +79,8 @@ private val TABS = listOf(
 )
 
 /**
- * Sign-in with the association account, then the server decides: managers and officers get the app,
- * anyone else sees "no access". Nothing is shown before both steps succeed.
+ * Device activation approved in the Telegram bot, then the server decides: managers and officers get
+ * the app, anyone else sees "no access". Nothing is shown before both steps succeed.
  */
 @Composable
 fun AdminNav(access: AccessVm = hiltViewModel()) {
@@ -91,7 +88,7 @@ fun AdminNav(access: AccessVm = hiltViewModel()) {
     val level by access.level.collectAsStateWithLifecycle()
     val error by access.error.collectAsStateWithLifecycle()
     when {
-        user == null -> AuthGraph()
+        user == null -> ActivationScreen()
         level == null && error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
             ErrorBox(error!!) { access.check() }
             OutlinedButton(onClick = { access.logout() }, modifier = Modifier.padding(top = 12.dp)) { Text(stringResource(CoreR.string.logout)) }
@@ -99,20 +96,6 @@ fun AdminNav(access: AccessVm = hiltViewModel()) {
         level == null -> Loading()
         level == "" -> NoAccess(onRetry = { access.check() }, onLogout = { access.logout() })
         else -> CompositionLocalProvider(LocalLevel provides level!!) { MainGraph(onLogout = { access.logout() }) }
-    }
-}
-
-@Composable
-private fun AuthGraph() {
-    val nav = rememberNavController()
-    NavHost(nav, startDestination = Routes.LOGIN) {
-        composable(Routes.LOGIN) {
-            StatsLoginScreen(
-                title = stringResource(R.string.st_dashboard), subtitle = stringResource(R.string.st_login_subtitle_admin),
-                onRegister = null, onForgot = { nav.navigate(Routes.FORGOT) }, onDone = {},
-            )
-        }
-        composable(Routes.FORGOT) { StatsForgotScreen(back = { nav.popBackStack() }) }
     }
 }
 
@@ -159,7 +142,7 @@ private fun MainGraph(onLogout: () -> Unit) {
         NavHost(nav, startDestination = Routes.DASHBOARD, modifier = Modifier.padding(pad)) {
             composable(Routes.DASHBOARD) {
                 DashboardScreen(
-                    onStaff = { nav.navigate(Routes.STAFF) }, onAudit = { nav.navigate(Routes.AUDIT) }, onLogout = onLogout,
+                    onStaff = { nav.navigate(Routes.STAFF) }, onAudit = { nav.navigate(Routes.AUDIT) }, onUsers = { nav.navigate(Routes.USERS) }, onLogout = onLogout,
                     onMeeting = { nav.navigate(Routes.meeting(it)) },
                 )
             }
@@ -190,6 +173,7 @@ private fun MainGraph(onLogout: () -> Unit) {
             }
             composable(Routes.STAFF) { StaffScreen(back = { nav.popBackStack() }) }
             composable(Routes.AUDIT) { AuditScreen(back = { nav.popBackStack() }) }
+            composable(Routes.USERS) { UsersScreen(back = { nav.popBackStack() }) }
         }
     }
 }

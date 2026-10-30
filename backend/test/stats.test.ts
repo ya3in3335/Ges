@@ -9,10 +9,14 @@ const MIN = 60_000;
 // Oran (31) / Sidi Chami (commune 1134) in the bundled geography data.
 const person = { firstName: 'أحمد', lastName: 'بن علي', gender: 'male', wilayaCode: 31, communeId: 1134, birthDate: '1995-04-12', maritalStatus: 'married' };
 
+/** Census administration only works from a bot-activated (long-lived) session; tests mark it directly. */
+const activate = (userId: string) => app.db.raw.prepare('UPDATE auth_sessions SET long_lived = 1 WHERE user_id = ?').run(userId);
+
 beforeEach(async () => {
-  app = new TestApp();
+  app = new TestApp({ TELEGRAM_APPROVER_IDS: '4242' });
   admin = await app.register(99);
   app.setRole(admin.id, 'ADMIN');
+  activate(admin.id);
 });
 
 /** Moves the clock forward; the admin's 15-minute access token is renewed like the apps do. */
@@ -35,22 +39,70 @@ describe('statistics: access', () => {
     }
   });
 
-  it('keeps members out of the administration routes; ADMIN appoints census staff', async () => {
+  it('keeps members out of the administration routes; officers and managers have different rights', async () => {
     const u = await app.register(1);
     expect((await app.req('GET', '/api/stats/access', { token: u.token })).body.level).toBeNull();
     expect((await app.req('GET', '/api/stats/admin/dashboard', { token: u.token })).status).toBe(403);
     expect((await app.req('POST', '/api/stats/admin/meetings', { token: u.token, body: { title: 'xxx', location: 'yy', startsAt: app.now + H } })).status).toBe(403);
-    // An officer cannot appoint others; an admin can.
-    expect((await app.req('POST', '/api/stats/admin/staff', { token: u.token, body: { identifier: 'user1@example.com', level: 'officer' } })).status).toBe(403);
-    const g = await app.req('POST', '/api/stats/admin/staff', { token: admin.token, body: { identifier: u.phone, level: 'officer' } });
-    expect(g.status).toBe(201);
+    // Appointed officer, on a bot-activated device.
+    app.db.raw.prepare(`INSERT INTO stats_staff (user_id, level, created_at) VALUES (?, 'officer', ?)`).run(u.id, app.now);
+    activate(u.id);
     expect((await app.req('GET', '/api/stats/access', { token: u.token })).body.level).toBe('officer');
     expect((await app.req('GET', '/api/stats/admin/dashboard', { token: u.token })).status).toBe(200);
-    // Officers register and confirm, but do not create meetings, correct data or export.
+    // Officers register and confirm, but do not create meetings, correct data, export or see the users database.
     expect((await app.req('POST', '/api/stats/admin/meetings', { token: u.token, body: { title: 'xxx', location: 'yy', startsAt: app.now + H } })).status).toBe(403);
     expect((await app.req('GET', '/api/stats/admin/registrations?all=1', { token: u.token })).status).toBe(403);
+    expect((await app.req('GET', '/api/stats/admin/users', { token: u.token })).status).toBe(403);
     expect((await app.req('DELETE', `/api/stats/admin/staff/${u.id}`, { token: admin.token })).status).toBe(200);
     expect((await app.req('GET', '/api/stats/admin/dashboard', { token: u.token })).status).toBe(403);
+  });
+
+  it('an e-mail / password session never opens the census administration, even for an ADMIN', async () => {
+    const boss = await app.register(2);
+    app.setRole(boss.id, 'ADMIN');
+    expect((await app.req('GET', '/api/stats/access', { token: boss.token })).body.level).toBeNull();
+    expect((await app.req('GET', '/api/stats/admin/dashboard', { token: boss.token })).status).toBe(403);
+  });
+
+  it('the census admin app is activated from the Telegram bot with a census level', async () => {
+    const r = await app.req('POST', '/api/auth/device-requests', { ip: app.freshIp(), body: { name: 'سمير', deviceName: 'Samsung A54', app: 'stats' } });
+    expect(r.status).toBe(201);
+    const msg = app.telegram.find((t) => t.method === 'sendMessage' && t.body.chat_id === 4242)!;
+    expect(msg.body.text).toContain('الإحصاء');
+    const id = r.body.requestId;
+    expect(msg.body.reply_markup.inline_keyboard.flat().map((b: { callback_data: string }) => b.callback_data)).toEqual([`dr:${id}:o`, `dr:${id}:m`, `dr:${id}:r`]);
+    const press = (data: string) => app.req('POST', '/telegram/webhook', {
+      headers: { 'x-telegram-bot-api-secret-token': 'webhook-secret-xyz' },
+      body: { update_id: app.update++, callback_query: { id: 'cb', from: { id: 4242 }, data, message: { message_id: 1, chat: { id: 4242 }, text: 'طلب' } } },
+    });
+    // An association role button does not fit a census request.
+    await press(`dr:${id}:s`);
+    const poll = () => app.req('GET', `/api/auth/device-requests/${id}`, { headers: { 'x-request-secret': r.body.secret } });
+    expect((await poll()).body.status).toBe('pending');
+    await press(`dr:${id}:m`);
+    const ok = await poll();
+    expect(ok.body.status).toBe('approved');
+    expect(ok.body.user.role).toBe('USER');
+    const t = ok.body.tokens.accessToken;
+    expect((await app.req('GET', '/api/stats/access', { token: t })).body.level).toBe('manager');
+    expect((await app.req('POST', '/api/stats/admin/meetings', { token: t, body: { title: 'اجتماع', location: 'المقر', startsAt: app.now + H } })).status).toBe(201);
+    // The association's supervisors' routes stay closed to it.
+    expect((await app.req('GET', '/api/admin/users', { token: t })).status).toBe(403);
+    // Removing it from the team disconnects the device.
+    const staff = await app.req('GET', '/api/stats/admin/staff', { token: admin.token });
+    const uid = staff.body.items.find((s: { fullName: string }) => s.fullName === 'سمير').userId;
+    expect((await app.req('DELETE', `/api/stats/admin/staff/${uid}`, { token: admin.token })).status).toBe(200);
+    expect((await app.req('GET', '/api/stats/access', { token: t })).status).toBe(401);
+  });
+
+  it('managers see the users database (accounts, contact, census participation)', async () => {
+    const u = await app.register(3);
+    const r = await app.req('GET', '/api/stats/admin/users?q=user3', { token: admin.token });
+    expect(r.status).toBe(200);
+    expect(r.body.items).toHaveLength(1);
+    expect(r.body.items[0]).toMatchObject({ id: u.id, email: 'user3@example.com', phone: u.phone, role: 'USER', registrations: 0 });
+    expect(JSON.stringify(r.body)).not.toContain('password');
+    expect((await app.req('GET', '/api/stats/admin/users', { token: admin.token })).body.total).toBe(2);
   });
 });
 

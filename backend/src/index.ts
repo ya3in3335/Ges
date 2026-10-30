@@ -94,7 +94,7 @@ export const router = new Router()
   .patch('/api/stats/admin/registrations/:id', stats.adminUpdateRegistration)
   .post('/api/stats/admin/checkin', stats.adminCheckin)
   .get('/api/stats/admin/staff', stats.adminListStaff)
-  .post('/api/stats/admin/staff', stats.adminGrantStaff)
+  .get('/api/stats/admin/users', stats.adminListUsers)
   .delete('/api/stats/admin/staff/:userId', stats.adminRevokeStaff)
   .get('/api/stats/admin/audit', stats.adminStatsAudit)
   // administration
