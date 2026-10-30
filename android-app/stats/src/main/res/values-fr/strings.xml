@@ -187,6 +187,7 @@
     <string name="st_disconnect">Déconnecter cet appareil</string>
     <string name="st_disconnect_confirm">Cet appareil sera déconnecté et une nouvelle activation sera nécessaire. Continuer ?</string>
     <string name="st_staff_hint">Les membres de l’équipe s’ajoutent par une demande d’activation, acceptée dans le bot avec le niveau choisi.</string>
+    <string name="st_users_tab">Utilisateurs</string>
     <string name="st_users_db">Base des utilisateurs</string>
     <string name="st_show_staff_accounts">Afficher les comptes d’équipe</string>
     <string name="st_registrations_count">Recensement : %1$d inscription(s), %2$d présence(s)</string>

@@ -9,8 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Event
-import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -55,7 +55,6 @@ object Routes {
     const val MEETING = "meeting/{id}"
     const val MEETING_EDIT = "meeting-edit?id={id}"
     const val REPORT = "report/{id}"
-    const val REGISTER = "register"
     const val CHECKIN = "checkin"
     const val RECORDS = "records?meeting={meeting}"
     const val RECORD = "record/{id}"
@@ -69,13 +68,14 @@ object Routes {
     fun record(id: String) = "record/$id"
 }
 
-private data class Tab(val route: String, val label: Int, val icon: ImageVector)
+private data class Tab(val route: String, val label: Int, val icon: ImageVector, val managerOnly: Boolean = false)
+// Administrators do not register themselves: the census form lives in the members' app only.
 private val TABS = listOf(
     Tab(Routes.DASHBOARD, R.string.st_dashboard, Icons.Outlined.Dashboard),
     Tab(Routes.MEETINGS, R.string.st_meetings, Icons.Outlined.Event),
-    Tab(Routes.REGISTER, R.string.st_register_person, Icons.Outlined.PersonAdd),
     Tab(Routes.CHECKIN, R.string.st_checkin, Icons.Outlined.QrCodeScanner),
     Tab(Routes.RECORDS, R.string.st_records, Icons.AutoMirrored.Outlined.ListAlt),
+    Tab(Routes.USERS, R.string.st_users_tab, Icons.Outlined.Storage, managerOnly = true),
 )
 
 /**
@@ -115,10 +115,12 @@ private fun MainGraph(onLogout: () -> Unit) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val current = entry?.destination?.route
+    val manager = LocalLevel.current == "manager"
+    val tabs = TABS.filter { manager || !it.managerOnly }
     Scaffold(
         bottomBar = {
-            if (TABS.any { it.route == current }) NavigationBar(containerColor = StatsColors.Surface) {
-                TABS.forEach { tab ->
+            if (tabs.any { it.route == current }) NavigationBar(containerColor = StatsColors.Surface) {
+                tabs.forEach { tab ->
                     NavigationBarItem(
                         selected = current == tab.route,
                         onClick = {
@@ -142,7 +144,7 @@ private fun MainGraph(onLogout: () -> Unit) {
         NavHost(nav, startDestination = Routes.DASHBOARD, modifier = Modifier.padding(pad)) {
             composable(Routes.DASHBOARD) {
                 DashboardScreen(
-                    onStaff = { nav.navigate(Routes.STAFF) }, onAudit = { nav.navigate(Routes.AUDIT) }, onUsers = { nav.navigate(Routes.USERS) }, onLogout = onLogout,
+                    onStaff = { nav.navigate(Routes.STAFF) }, onAudit = { nav.navigate(Routes.AUDIT) }, onLogout = onLogout,
                     onMeeting = { nav.navigate(Routes.meeting(it)) },
                 )
             }
@@ -163,7 +165,6 @@ private fun MainGraph(onLogout: () -> Unit) {
             composable(Routes.REPORT, arguments = listOf(navArgument("id") { type = NavType.StringType })) {
                 ReportScreen(it.arguments!!.getString("id")!!, back = { nav.popBackStack() })
             }
-            composable(Routes.REGISTER) { StaffRegisterScreen() }
             composable(Routes.CHECKIN) { CheckinScreen() }
             composable(Routes.RECORDS, arguments = listOf(navArgument("meeting") { type = NavType.StringType; nullable = true; defaultValue = null })) {
                 RecordsScreen(it.arguments?.getString("meeting"), onOpen = { id -> nav.navigate(Routes.record(id)) })
@@ -173,7 +174,7 @@ private fun MainGraph(onLogout: () -> Unit) {
             }
             composable(Routes.STAFF) { StaffScreen(back = { nav.popBackStack() }) }
             composable(Routes.AUDIT) { AuditScreen(back = { nav.popBackStack() }) }
-            composable(Routes.USERS) { UsersScreen(back = { nav.popBackStack() }) }
+            composable(Routes.USERS) { UsersScreen() }
         }
     }
 }

@@ -17,7 +17,7 @@ Shared code (census API, form, wilayas/communes, charts, QR, sign-in screens, th
 | | Member | Officer | Manager |
 | --- | --- | --- | --- |
 | Register self, see own card / history | ✓ | ✓ | ✓ |
-| Dashboard, meetings list, register people, confirm attendance | | ✓ | ✓ |
+| Dashboard, meetings list, records, confirm attendance (the admin app has no census form: people register from the members' app) | | ✓ | ✓ |
 | Create / edit / close meetings, correct records, export, audit log, users database, census team | | | ✓ |
 
 - **No e-mail or password in the admin app.**

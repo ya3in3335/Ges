@@ -187,6 +187,7 @@
     <string name="st_disconnect">فصل هذا الجهاز</string>
     <string name="st_disconnect_confirm">سيُفصل هذا الجهاز ويلزم طلب تفعيل جديد. هل تريد المتابعة؟</string>
     <string name="st_staff_hint">يُضاف أعضاء الفريق عبر طلب تفعيل من تطبيق إدارة الإحصاء، ويقبله مسؤول الجمعية من البوت مع اختيار المستوى.</string>
+    <string name="st_users_tab">المستخدمون</string>
     <string name="st_users_db">قاعدة بيانات المستخدمين</string>
     <string name="st_show_staff_accounts">إظهار حسابات الفريق</string>
     <string name="st_registrations_count">مشاركات الإحصاء: %1$d — حضر: %2$d</string>

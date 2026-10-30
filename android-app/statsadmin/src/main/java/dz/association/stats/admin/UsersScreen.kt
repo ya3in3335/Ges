@@ -53,7 +53,7 @@ private val ROLES = listOf("", "USER", "VOLUNTEER", "EDITOR", "ADMIN", "SUPER_AD
 
 /** The association's accounts (managers only; the server checks and logs the access). */
 @Composable
-fun UsersScreen(back: () -> Unit, vm: UsersVm = hiltViewModel()) {
+fun UsersScreen(vm: UsersVm = hiltViewModel()) {
     val items by vm.items.collectAsStateWithLifecycle()
     val total by vm.total.collectAsStateWithLifecycle()
     val hasMore by vm.hasMore.collectAsStateWithLifecycle()
@@ -63,7 +63,7 @@ fun UsersScreen(back: () -> Unit, vm: UsersVm = hiltViewModel()) {
     val staff by vm.staff.collectAsStateWithLifecycle()
     var text by rememberSaveable { mutableStateOf(vm.query.value) }
     LaunchedEffect(text) { if (text != vm.query.value) { delay(350); vm.query.value = text; vm.load(reset = true) } }
-    Scaffold(topBar = { AppTopBar(stringResource(R.string.st_users_db), back) }) { pad ->
+    Scaffold(topBar = { AppTopBar(stringResource(R.string.st_users_db)) }) { pad ->
         LazyColumn(Modifier.padding(pad), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item {
                 OutlinedTextField(text, { text = it.take(80) }, placeholder = { Text("${stringResource(CoreR.string.full_name)} / ${stringResource(CoreR.string.email)} / ${stringResource(CoreR.string.phone)}") },

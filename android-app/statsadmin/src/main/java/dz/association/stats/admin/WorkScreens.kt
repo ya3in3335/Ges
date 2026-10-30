@@ -52,7 +52,6 @@ import dz.association.app.ui.components.AppTopBar
 import dz.association.app.ui.components.PrimaryButton
 import dz.association.stats.R
 import dz.association.stats.data.Registration
-import dz.association.stats.ui.CensusForm
 import dz.association.stats.ui.Dropdown
 import dz.association.stats.ui.EmptyNote
 import dz.association.stats.ui.ErrorBox
@@ -63,38 +62,6 @@ import dz.association.stats.ui.StatusBadge
 import dz.association.stats.ui.statsError
 import dz.association.stats.ui.statusColor
 import dz.association.stats.ui.statusLabel
-
-// ───────────── Registering a person ─────────────
-
-@Composable
-fun StaffRegisterScreen(vm: StaffRegisterVm = hiltViewModel()) {
-    val meetings by vm.meetings.collectAsStateWithLifecycle()
-    val busy by vm.busy.collectAsStateWithLifecycle()
-    val error by vm.error.collectAsStateWithLifecycle()
-    val done by vm.done.collectAsStateWithLifecycle()
-    Scaffold(topBar = { AppTopBar(stringResource(R.string.st_census_title)) }) { pad ->
-        Column(Modifier.fillMaxSize().padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            AnimatedVisibility(done != null) {
-                done?.let { r ->
-                    Surface(shape = RoundedCornerShape(18.dp), color = StatsColors.Primary.copy(alpha = 0.14f), border = BorderStroke(1.dp, StatsColors.Primary)) {
-                        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Icon(Icons.Outlined.CheckCircle, null, tint = StatsColors.Primary)
-                            Column {
-                                Text("${r.firstName} ${r.lastName}", color = StatsColors.Text, style = MaterialTheme.typography.titleSmall)
-                                Text(stringResource(R.string.st_census_success, r.regNo), color = StatsColors.Primary, style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                    }
-                }
-            }
-            CensusForm(vm.form, vm.geo, meetings ?: emptyList())
-            if (vm.form.showErrors && vm.form.errors(vm.geo).isNotEmpty()) Text(stringResource(R.string.st_form_fix_errors), color = MaterialTheme.colorScheme.error)
-            error?.let { ErrorBox(it) }
-            PrimaryButton(stringResource(R.string.st_register_btn), { vm.submit() }, enabled = !meetings.isNullOrEmpty(), loading = busy)
-            Spacer(Modifier.height(24.dp))
-        }
-    }
-}
 
 // ───────────── Attendance ─────────────
 

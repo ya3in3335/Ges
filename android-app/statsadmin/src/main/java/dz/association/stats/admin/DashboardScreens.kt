@@ -20,7 +20,6 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Wc
 import androidx.compose.material3.DropdownMenu
@@ -68,7 +67,7 @@ import dz.association.stats.ui.maritalLabel
 import kotlinx.coroutines.launch
 
 @Composable
-fun DashboardScreen(onStaff: () -> Unit, onAudit: () -> Unit, onUsers: () -> Unit, onLogout: () -> Unit, onMeeting: (String) -> Unit, vm: DashboardVm = hiltViewModel()) {
+fun DashboardScreen(onStaff: () -> Unit, onAudit: () -> Unit, onLogout: () -> Unit, onMeeting: (String) -> Unit, vm: DashboardVm = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val selected by vm.meetingId.collectAsStateWithLifecycle()
     val manager = LocalLevel.current == "manager"
@@ -84,7 +83,6 @@ fun DashboardScreen(onStaff: () -> Unit, onAudit: () -> Unit, onUsers: () -> Uni
             IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.Groups, stringResource(R.string.st_more)) }
             DropdownMenu(menu, { menu = false }) {
                 DropdownMenuItem(text = { Text(stringResource(R.string.st_staff)) }, leadingIcon = { Icon(Icons.Outlined.Groups, null) }, onClick = { menu = false; onStaff() })
-                if (manager) DropdownMenuItem(text = { Text(stringResource(R.string.st_users_db)) }, leadingIcon = { Icon(Icons.Outlined.Storage, null) }, onClick = { menu = false; onUsers() })
                 if (manager) DropdownMenuItem(text = { Text(stringResource(R.string.st_audit)) }, leadingIcon = { Icon(Icons.Outlined.History, null) }, onClick = { menu = false; onAudit() })
                 DropdownMenuItem(text = { Text(if (AppLocale.isFrench) "العربية" else "Français") }, onClick = { menu = false; AppLocale.set(if (AppLocale.isFrench) "ar" else "fr") })
                 DropdownMenuItem(text = { Text(stringResource(R.string.st_disconnect)) }, leadingIcon = { Icon(Icons.AutoMirrored.Outlined.Logout, null) }, onClick = { menu = false; confirmDisconnect = true })

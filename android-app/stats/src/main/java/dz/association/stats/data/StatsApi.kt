@@ -49,7 +49,6 @@ interface StatsApi {
         @Query("pageSize") pageSize: Int = 50,
         @Query("all") all: Int? = null,
     ): RegistrationList
-    @POST("api/stats/admin/registrations") suspend fun staffRegister(@Body body: StaffRegisterRequest): RegistrationResponse
     @GET("api/stats/admin/registrations/{id}") suspend fun registration(@Path("id") id: String): RegistrationResponse
     @PATCH("api/stats/admin/registrations/{id}") suspend fun updateRegistration(@Path("id") id: String, @Body body: RegistrationPatch): RegistrationResponse
     @POST("api/stats/admin/checkin") suspend fun checkin(@Body body: CheckinRequest): RegistrationResponse

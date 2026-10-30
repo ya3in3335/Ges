@@ -98,21 +98,6 @@ import kotlinx.serialization.Serializable
     val maritalStatus: String,
 )
 
-@Serializable data class StaffRegisterRequest(
-    val meetingId: String,
-    val firstName: String,
-    val lastName: String,
-    val gender: String? = null,
-    val wilayaCode: Int,
-    val communeId: Int,
-    val birthDate: String,
-    val maritalStatus: String,
-) {
-    companion object {
-        fun of(meetingId: String, p: PersonInput) = StaffRegisterRequest(meetingId, p.firstName, p.lastName, p.gender, p.wilayaCode, p.communeId, p.birthDate, p.maritalStatus)
-    }
-}
-
 @Serializable data class ProfileDraft(
     val firstName: String = "",
     val lastName: String = "",

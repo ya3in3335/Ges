@@ -23,7 +23,7 @@ class ResilienceTest {
         .build()
 
     @Test fun getIsRetriedOnTimeoutThenSucceeds() {
-        val server = MockWebServer().apply { start() }
+        val server = MockWebServer().apply { start(java.net.InetAddress.getByName("127.0.0.1"), 0) }
         server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE))
         server.enqueue(MockResponse().setBody("ok"))
         val res = client().newCall(Request.Builder().url(server.url("/api/home")).build()).execute()
@@ -33,7 +33,7 @@ class ResilienceTest {
     }
 
     @Test fun postThatMayHaveReachedTheServerIsNeverRepeated() {
-        val server = MockWebServer().apply { start() }
+        val server = MockWebServer().apply { start(java.net.InetAddress.getByName("127.0.0.1"), 0) }
         server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE))
         server.enqueue(MockResponse().setBody("second"))
         val call = client().newCall(Request.Builder().url(server.url("/api/polls/x/vote")).post("{}".toRequestBody()).build())

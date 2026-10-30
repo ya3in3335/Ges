@@ -16,7 +16,6 @@ import dz.association.stats.data.MeetingRequest
 import dz.association.stats.data.Registration
 import dz.association.stats.data.RegistrationPatch
 import dz.association.stats.data.StaffList
-import dz.association.stats.data.StaffRegisterRequest
 import dz.association.stats.data.StatsAccount
 import dz.association.stats.data.StatsApi
 import dz.association.stats.data.SyncPoller
@@ -113,42 +112,6 @@ class MeetingEditVm @Inject constructor(private val api: StatsApi, private val p
             is Result.Err -> error.value = r.error
         }
         busy.value = false
-    }
-}
-
-/** Census officers register people who are present (with or without an account). */
-@HiltViewModel
-class StaffRegisterVm @Inject constructor(private val api: StatsApi, geo: Geo, private val poller: SyncPoller) : ViewModel() {
-    val geo = geo.data
-    val form = CensusFormState()
-    val meetings = MutableStateFlow<List<Meeting>?>(null)
-    val busy = MutableStateFlow(false)
-    val error = MutableStateFlow<AppError?>(null)
-    val done = MutableStateFlow<Registration?>(null)
-
-    init { loadMeetings() }
-
-    fun loadMeetings() = viewModelScope.launch {
-        (apiCall { api.meetings().items } as? Result.Ok)?.let { r ->
-            val open = r.value.filter { it.status == "open" }
-            meetings.value = open
-            if (form.meetingId == null) form.meetingId = open.minByOrNull { kotlin.math.abs(it.startsAt - System.currentTimeMillis()) }?.id
-        }
-    }
-
-    fun submit() {
-        form.showErrors = true
-        val input = form.toInput(geo) ?: return
-        val meeting = form.meetingId ?: return
-        viewModelScope.launch {
-            busy.value = true; error.value = null; done.value = null
-            when (val r = apiCall { api.staffRegister(StaffRegisterRequest.of(meeting, input)).item }) {
-                // Keep the meeting and the place for the next person; clear the personal fields.
-                is Result.Ok -> { done.value = r.value; form.clearPerson(); poller.poke() }
-                is Result.Err -> error.value = r.error
-            }
-            busy.value = false
-        }
     }
 }
 
