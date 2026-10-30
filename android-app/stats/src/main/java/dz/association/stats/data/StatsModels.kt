@@ -191,6 +191,10 @@ import kotlinx.serialization.Serializable
     val wilayaCode: Int? = null,
     val wilayaAr: String? = null,
     val communeAr: String? = null,
+    /** member · supervisor · census */
+    val kind: String = "member",
+    val statsLevel: String? = null,
+    val lastSeen: Long? = null,
 )
 @Serializable data class UserList(val items: List<UserRow>, val hasMore: Boolean = false, val total: Int = 0, val page: Int = 1)
 

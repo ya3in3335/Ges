@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,7 +59,7 @@ fun UsersScreen(vm: UsersVm = hiltViewModel()) {
     val loading by vm.loading.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
     val role by vm.role.collectAsStateWithLifecycle()
-    val staff by vm.staff.collectAsStateWithLifecycle()
+    val kind by vm.kind.collectAsStateWithLifecycle()
     var text by rememberSaveable { mutableStateOf(vm.query.value) }
     LaunchedEffect(text) { if (text != vm.query.value) { delay(350); vm.query.value = text; vm.load(reset = true) } }
     Scaffold(topBar = { AppTopBar(stringResource(R.string.st_users_db)) }) { pad ->
@@ -73,11 +72,10 @@ fun UsersScreen(vm: UsersVm = hiltViewModel()) {
                 val all = stringResource(R.string.st_all)
                 ChoiceChips(ROLES, role ?: "", { if (it.isEmpty()) all else roleLabel(it) }, { vm.role.value = it.ifEmpty { null }; vm.load(reset = true) })
             }
+            item { Text(stringResource(R.string.st_users_hint), color = StatsColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
             item {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.st_show_staff_accounts), Modifier.weight(1f), color = StatsColors.TextSecondary)
-                    Switch(staff, { vm.staff.value = it; vm.load(reset = true) })
-                }
+                val labels = mapOf("" to R.string.st_kind_all, "members" to R.string.st_kind_members, "supervisors" to R.string.st_kind_supervisors, "census" to R.string.st_kind_census)
+                ChoiceChips(labels.keys.toList(), kind ?: "", { stringResource(labels.getValue(it)) }, { vm.kind.value = it.ifEmpty { null }; vm.load(reset = true) })
             }
             item { Text(stringResource(R.string.st_results_count, total), color = StatsColors.TextSecondary, style = MaterialTheme.typography.labelMedium) }
             error?.let { e -> item { ErrorBox(e) { vm.load(reset = true) } } }
@@ -97,7 +95,10 @@ private fun UserCard(u: UserRow) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(u.fullName, color = StatsColors.Text, style = MaterialTheme.typography.titleSmall)
-                Text(roleLabel(u.role) + if (u.status != "active") " · ${u.status}" else "", color = StatsColors.Primary, style = MaterialTheme.typography.labelMedium)
+                val kindNote = stringResource(when (u.kind) { "supervisor" -> R.string.st_kind_supervisor_note; "census" -> R.string.st_kind_census_note; else -> R.string.st_kind_member_note })
+                val level = u.statsLevel?.let { stringResource(if (it == "manager") R.string.st_level_manager else R.string.st_level_officer) }
+                Text((level ?: roleLabel(u.role)) + if (u.status != "active") " · ${u.status}" else "", color = StatsColors.Primary, style = MaterialTheme.typography.labelMedium)
+                Text(kindNote, color = if (u.kind == "member") StatsColors.TextSecondary else StatsColors.Accent, style = MaterialTheme.typography.labelSmall)
             }
             if (u.phoneVerified || u.emailVerified) Icon(Icons.Outlined.Verified, stringResource(R.string.st_verified), tint = StatsColors.Primary, modifier = Modifier.size(18.dp))
         }
@@ -105,6 +106,7 @@ private fun UserCard(u: UserRow) {
         u.phone?.let { Text(it, color = StatsColors.TextSecondary, style = ltr) }
         Text(stringResource(R.string.st_registrations_count, u.registrations, u.attended), color = StatsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
         if (open) {
+            u.lastSeen?.let { Text(stringResource(R.string.st_last_seen, dz.association.app.core.util.formatDateTime(it)), color = StatsColors.TextSecondary, style = MaterialTheme.typography.bodySmall) }
             Text(stringResource(R.string.st_joined, formatDate(u.createdAt)), color = StatsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             Text("${stringResource(CoreR.string.email)}: ${stringResource(if (u.emailVerified) R.string.st_verified else R.string.st_not_verified)} · " +
                 "${stringResource(CoreR.string.phone)}: ${stringResource(if (u.phoneVerified) R.string.st_verified else R.string.st_not_verified)}",

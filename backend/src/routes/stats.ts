@@ -683,19 +683,26 @@ export async function adminListUsers(ctx: Ctx): Promise<Response> {
   }
   const role = p.get('role');
   if (role && ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'VOLUNTEER', 'USER'].includes(role)) { where.push('u.role = ?'); args.push(role); }
-  if (p.get('staff') !== '1') where.push('u.is_staff_only = 0');
+  // Everyone by default: members (any app or the website), supervisors' devices, census team devices.
+  const kind = p.get('kind');
+  if (kind === 'members') where.push('u.is_staff_only = 0');
+  else if (kind === 'supervisors') where.push('u.is_staff_only = 1 AND NOT EXISTS (SELECT 1 FROM stats_staff st WHERE st.user_id = u.id)');
+  else if (kind === 'census') where.push('u.is_staff_only = 1 AND EXISTS (SELECT 1 FROM stats_staff st WHERE st.user_id = u.id)');
   const sqlWhere = `WHERE ${where.join(' AND ')}`;
   const [rows, count] = await Promise.all([
     ctx.env.DB.prepare(
       `SELECT u.id, u.full_name, u.email, u.phone_e164, u.role, u.status, u.email_verified_at, u.phone_verified_at, u.is_staff_only, u.created_at,
          (SELECT COUNT(*) FROM stats_registrations r WHERE r.user_id = u.id AND r.status <> 'cancelled') AS regs,
          (SELECT COUNT(*) FROM stats_registrations r WHERE r.user_id = u.id AND r.status IN ('present','late')) AS attended,
+         (SELECT MAX(s.last_used_at) FROM auth_sessions s WHERE s.user_id = u.id) AS last_seen,
+         (SELECT level FROM stats_staff st WHERE st.user_id = u.id) AS stats_level,
          p.wilaya_code, p.commune_id, p.birth_date, p.marital_status, p.gender
        FROM users u LEFT JOIN member_profiles p ON p.user_id = u.id ${sqlWhere} ORDER BY u.created_at DESC LIMIT ? OFFSET ?`,
     ).bind(...args, size + 1, (page - 1) * size).all<{
       id: string; full_name: string; email: string; phone_e164: string; role: string; status: string; email_verified_at: number | null;
       phone_verified_at: number | null; is_staff_only: number; created_at: number; regs: number; attended: number;
       wilaya_code: number | null; commune_id: number | null; birth_date: string | null; marital_status: string | null; gender: string | null;
+      last_seen: number | null; stats_level: string | null;
     }>(),
     ctx.env.DB.prepare(`SELECT COUNT(*) AS n FROM users u ${sqlWhere}`).bind(...args).first<{ n: number }>(),
   ]);
@@ -705,6 +712,8 @@ export async function adminListUsers(ctx: Ctx): Promise<Response> {
     items: items.slice(0, size).map((u) => ({
       id: u.id, fullName: u.full_name, email: u.is_staff_only ? null : u.email, phone: u.is_staff_only ? null : u.phone_e164, role: u.role,
       status: u.status, emailVerified: !!u.email_verified_at, phoneVerified: !!u.phone_verified_at, staffOnly: !!u.is_staff_only, createdAt: u.created_at,
+      // member: an association account (members' app, census app, website); supervisor / census: a bot-activated device account.
+      kind: !u.is_staff_only ? 'member' : u.stats_level ? 'census' : 'supervisor', statsLevel: u.stats_level, lastSeen: u.last_seen,
       registrations: u.regs, attended: u.attended, gender: u.gender, birthDate: u.birth_date, maritalStatus: u.marital_status,
       wilayaCode: u.wilaya_code, wilayaAr: u.wilaya_code ? WILAYAS.get(u.wilaya_code)?.ar ?? null : null,
       communeAr: u.commune_id ? COMMUNES.get(u.commune_id)?.ar ?? null : null,

@@ -196,5 +196,14 @@
     <string name="st_not_verified">غير موثّق</string>
     <string name="st_err_approval_not_configured">التفعيل عبر البوت غير مُعدّ على الخادم</string>
     <string name="st_err_cannot_remove_self">لا يمكنك إزالة نفسك من الفريق</string>
+    <string name="st_kind_all">كل الحسابات</string>
+    <string name="st_kind_members">الأعضاء</string>
+    <string name="st_kind_supervisors">أجهزة المشرفين</string>
+    <string name="st_kind_census">فريق الإحصاء</string>
+    <string name="st_kind_member_note">عضو — تطبيق الجمعية / الموقع / تطبيق الإحصاء</string>
+    <string name="st_kind_supervisor_note">جهاز مشرف (تطبيق المشرفين)</string>
+    <string name="st_kind_census_note">جهاز فريق الإحصاء</string>
+    <string name="st_last_seen">آخر نشاط: %1$s</string>
+    <string name="st_users_hint">كل الحسابات مخزّنة في قاعدة بيانات واحدة مشتركة بين تطبيق الجمعية والموقع وتطبيقي الإحصاء.</string>
     <string-array name="st_months"><item>جانفي</item><item>فيفري</item><item>مارس</item><item>أفريل</item><item>ماي</item><item>جوان</item><item>جويلية</item><item>أوت</item><item>سبتمبر</item><item>أكتوبر</item><item>نوفمبر</item><item>ديسمبر</item></string-array>
 </resources>

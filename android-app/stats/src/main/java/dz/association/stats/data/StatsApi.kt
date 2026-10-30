@@ -58,7 +58,7 @@ interface StatsApi {
     @GET("api/stats/admin/users") suspend fun users(
         @Query("q") query: String? = null,
         @Query("role") role: String? = null,
-        @Query("staff") staff: Int? = null,
+        @Query("kind") kind: String? = null,
         @Query("page") page: Int = 1,
     ): UserList
 

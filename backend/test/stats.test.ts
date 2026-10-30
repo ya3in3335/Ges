@@ -103,6 +103,15 @@ describe('statistics: access', () => {
     expect(r.body.items[0]).toMatchObject({ id: u.id, email: 'user3@example.com', phone: u.phone, role: 'USER', registrations: 0 });
     expect(JSON.stringify(r.body)).not.toContain('password');
     expect((await app.req('GET', '/api/stats/admin/users', { token: admin.token })).body.total).toBe(2);
+    // Supervisors' and census devices are listed too, each with its kind.
+    app.db.raw.prepare(`INSERT INTO users (id, full_name, email, phone_e164, password_hash, role, status, is_staff_only, created_at, updated_at)
+      VALUES ('s1', 'مشرف', 'staff-s1@staff.invalid', 'staff:s1', '!', 'EDITOR', 'active', 1, 1, 1)`).run();
+    const all = await app.req('GET', '/api/stats/admin/users', { token: admin.token });
+    expect(all.body.total).toBe(3);
+    expect(all.body.items.find((x: { id: string }) => x.id === 's1')).toMatchObject({ kind: 'supervisor', email: null });
+    expect(all.body.items.find((x: { id: string }) => x.id === u.id).kind).toBe('member');
+    expect((await app.req('GET', '/api/stats/admin/users?kind=members', { token: admin.token })).body.total).toBe(2);
+    expect((await app.req('GET', '/api/stats/admin/users?kind=supervisors', { token: admin.token })).body.total).toBe(1);
   });
 });
 

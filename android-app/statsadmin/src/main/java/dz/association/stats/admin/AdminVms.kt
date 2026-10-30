@@ -286,7 +286,7 @@ class UsersVm @Inject constructor(private val api: StatsApi) : ViewModel() {
     val error = MutableStateFlow<AppError?>(null)
     val query = MutableStateFlow("")
     val role = MutableStateFlow<String?>(null)
-    val staff = MutableStateFlow(false)
+    val kind = MutableStateFlow<String?>(null)
     private var page = 1
 
     init { load(reset = true) }
@@ -294,7 +294,7 @@ class UsersVm @Inject constructor(private val api: StatsApi) : ViewModel() {
     fun load(reset: Boolean) = viewModelScope.launch {
         if (reset) page = 1 else page++
         loading.value = true; error.value = null
-        when (val r = apiCall { api.users(query.value.trim().ifBlank { null }, role.value, if (staff.value) 1 else null, page) }) {
+        when (val r = apiCall { api.users(query.value.trim().ifBlank { null }, role.value, kind.value, page) }) {
             is Result.Ok -> { items.value = if (reset) r.value.items else items.value + r.value.items; total.value = r.value.total; hasMore.value = r.value.hasMore }
             is Result.Err -> error.value = r.error
         }
