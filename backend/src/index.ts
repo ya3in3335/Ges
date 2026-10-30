@@ -17,6 +17,7 @@ import * as admin from './routes/admin';
 import * as devices from './routes/devices';
 import * as deviceRequests from './routes/deviceRequests';
 import * as lectures from './routes/lectures';
+import * as stats from './routes/stats';
 import { home } from './routes/home';
 import { flushChannelOutbox } from './services/channel';
 
@@ -71,6 +72,31 @@ export const router = new Router()
   .post('/api/volunteers', volunteers.applyVolunteer)
   .get('/api/volunteers/me', volunteers.myVolunteer)
   .delete('/api/volunteers/me', volunteers.withdrawVolunteer)
+  // census (statistics apps)
+  .get('/api/stats/access', stats.access)
+  .get('/api/stats/sync', stats.sync)
+  .get('/api/stats/meetings', stats.listOpenMeetings)
+  .post('/api/stats/meetings/:id/register', stats.registerSelf)
+  .get('/api/stats/me/profile', stats.myStatsProfile)
+  .put('/api/stats/me/profile', stats.updateMyStatsProfile)
+  .get('/api/stats/me/registrations', stats.myRegistrations)
+  .get('/api/stats/me/registrations/:id', stats.myRegistration)
+  .post('/api/stats/me/registrations/:id/cancel', stats.cancelMyRegistration)
+  .get('/api/stats/admin/dashboard', stats.adminDashboard)
+  .get('/api/stats/admin/meetings', stats.adminListMeetings)
+  .post('/api/stats/admin/meetings', stats.adminCreateMeeting)
+  .get('/api/stats/admin/meetings/:id', stats.adminGetMeeting)
+  .patch('/api/stats/admin/meetings/:id', stats.adminUpdateMeeting)
+  .post('/api/stats/admin/meetings/:id/close', stats.adminCloseMeeting)
+  .get('/api/stats/admin/registrations', stats.adminListRegistrations)
+  .post('/api/stats/admin/registrations', stats.adminRegister)
+  .get('/api/stats/admin/registrations/:id', stats.adminGetRegistration)
+  .patch('/api/stats/admin/registrations/:id', stats.adminUpdateRegistration)
+  .post('/api/stats/admin/checkin', stats.adminCheckin)
+  .get('/api/stats/admin/staff', stats.adminListStaff)
+  .post('/api/stats/admin/staff', stats.adminGrantStaff)
+  .delete('/api/stats/admin/staff/:userId', stats.adminRevokeStaff)
+  .get('/api/stats/admin/audit', stats.adminStatsAudit)
   // administration
   .get('/api/admin/overview', admin.overview)
   .get('/api/admin/telegram-stats', admin.telegramStats)

@@ -48,9 +48,9 @@ jobs:
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests (JVM + Robolectric)
-        run: ./gradlew --stacktrace :app:testDebugUnitTest :admin:testDebugUnitTest
+        run: ./gradlew --stacktrace :app:testDebugUnitTest :admin:testDebugUnitTest :stats:testDebugUnitTest :statsadmin:testDebugUnitTest :statsmember:testDebugUnitTest
       - name: Lint
-        run: ./gradlew :app:lintDebug :admin:lintDebug
+        run: ./gradlew :app:lintDebug :admin:lintDebug :stats:lintDebug :statsadmin:lintDebug :statsmember:lintDebug
       - name: Assemble debug APKs (members + supervisors)
         run: ./gradlew :app:assembleDebug :admin:assembleDebug -PVERSION_CODE=${{ github.run_number }}
       - uses: actions/upload-artifact@v4
@@ -60,13 +60,35 @@ jobs:
             android-app/app/build/outputs/apk/debug/*.apk
             android-app/admin/build/outputs/apk/debug/*.apk
           retention-days: 14
+      - name: Census APKs (optimised, signed with the debug key — for testing)
+        run: |
+          ./gradlew :statsadmin:assembleStaging :statsmember:assembleStaging -PVERSION_CODE=${{ github.run_number }}
+          mkdir -p out
+          cp statsadmin/build/outputs/apk/staging/statsadmin-staging.apk out/association-statistics-admin.apk
+          cp statsmember/build/outputs/apk/staging/statsmember-staging.apk out/association-statistics-member.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          # Fails the job if a file is missing, unsigned or not the expected application.
+          for apk in out/*.apk; do "$BT/apksigner" verify "$apk"; done
+          "$BT/aapt2" dump badging out/association-statistics-admin.apk | grep "package: name='dz.association.stats.admin.debug'"
+          "$BT/aapt2" dump badging out/association-statistics-member.apk | grep "package: name='dz.association.stats.member.debug'"
+          sha256sum out/*.apk | tee out/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: statistics-apks
+          path: |
+            android-app/out/association-statistics-admin.apk
+            android-app/out/association-statistics-member.apk
+            android-app/out/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-and-lint-reports
           path: |
-            android-app/app/build/reports/tests/
+            android-app/*/build/reports/tests/
             android-app/*/build/reports/lint-results-debug.html
+            android-app/*/build/screenshots/
           retention-days: 7
 
   release:
@@ -103,11 +125,12 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease :admin:assembleRelease -PVERSION_NAME=$VERSION_NAME -PVERSION_CODE=$VERSION_CODE
+        run: ./gradlew :app:assembleRelease :admin:assembleRelease :statsadmin:assembleRelease :statsmember:assembleRelease -PVERSION_NAME=$VERSION_NAME -PVERSION_CODE=$VERSION_CODE
       - name: Verify signature and checksum
         run: |
           BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          for pair in "app/build/outputs/apk/release/app-release.apk:association-$VERSION_NAME.apk" "admin/build/outputs/apk/release/admin-release.apk:association-admin-$VERSION_NAME.apk"; do
+          for pair in "app/build/outputs/apk/release/app-release.apk:association-$VERSION_NAME.apk" "admin/build/outputs/apk/release/admin-release.apk:association-admin-$VERSION_NAME.apk" \
+                      "statsadmin/build/outputs/apk/release/statsadmin-release.apk:association-statistics-admin-$VERSION_NAME.apk" "statsmember/build/outputs/apk/release/statsmember-release.apk:association-statistics-member-$VERSION_NAME.apk"; do
             APK="${pair%%:*}"; OUT="${pair##*:}"
             test -f "$APK" || { echo "::error::$APK is not signed (check signing secrets)"; exit 1; }
             "$BT/apksigner" verify --print-certs "$APK"

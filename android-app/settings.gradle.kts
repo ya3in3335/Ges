@@ -14,3 +14,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "AssociationApp"
 include(":core", ":app", ":admin")
+// Census (statistics) apps: one for officers and managers, one for members.
+include(":stats", ":statsadmin", ":statsmember")

@@ -94,6 +94,10 @@ export async function deleteMe(ctx: Ctx): Promise<Response> {
     db.prepare('DELETE FROM activity_registrations WHERE user_id = ?').bind(me.id),
     db.prepare('DELETE FROM lecture_registrations WHERE user_id = ?').bind(me.id),
     db.prepare('DELETE FROM member_profiles WHERE user_id = ?').bind(me.id),
+    // Census: pending registrations go; past attendance stays in the association's records without the account link.
+    db.prepare(`DELETE FROM stats_registrations WHERE user_id = ? AND status IN ('registered','cancelled')`).bind(me.id),
+    db.prepare('UPDATE stats_registrations SET user_id = NULL WHERE user_id = ?').bind(me.id),
+    db.prepare('DELETE FROM stats_staff WHERE user_id = ?').bind(me.id),
     db.prepare('DELETE FROM auth_codes WHERE user_id = ?').bind(me.id),
     db.prepare(`UPDATE verification_audit SET telegram_user_id = NULL WHERE user_id = ?`).bind(me.id),
   ]);
