@@ -42,7 +42,7 @@ class ScreenshotTest {
     private val geo = GeoData.parse(File("../stats/src/main/assets/dz_geo.json").readText())
     private val meeting = Meeting("m1", "مثال: الاجتماع العام للأعضاء", null, "مقر الجمعية", now, now - 3_600_000, now + 10_800_000, now + 900_000, true, true)
     private val reg = Registration(
-        "11111111-2222-3333-4444-555555555555", "m1", 7, "أحمد", "بن علي", "male", 31, "وهران", "Oran", 1135, "السانية", "Es Senia", "1995-04-12", "married", "registered",
+        "11111111-2222-3333-4444-555555555555", "m1", 7, "أحمد", "بن علي", "male", 31, "وهران", "Oran", 1135, "السانية", "Es Senia", "1995-04-12", "married", 2, "registered",
         meeting = MeetingRef(meeting.title, now, meeting.location, "open"), qr = "AST1.11111111-2222-3333-4444-555555555555.abcdefghijklmnopqrstuvwxyz0",
     )
 
@@ -67,7 +67,7 @@ class ScreenshotTest {
     @Test fun cardPresent() = shot("member_card_present") { CardContent(reg.copy(status = "present", checkedInAt = now + 60_000)) }
 
     @Test fun censusForm() = shot("member_census_form") {
-        val s = CensusFormState().apply { firstName = "أحمد"; lastName = "بن علي"; wilaya = 31; commune = 1135; day = 12; month = 4; year = 1995; marital = "married"; meetingId = "m1" }
+        val s = CensusFormState().apply { firstName = "أحمد"; lastName = "بن علي"; wilaya = 31; commune = 1135; day = 12; month = 4; year = 1995; marital = "married"; children = "2"; meetingId = "m1" }
         CensusForm(s, geo, listOf(meeting))
     }
 

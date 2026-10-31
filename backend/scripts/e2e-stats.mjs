@@ -58,7 +58,7 @@ console.log('\n■ Member app → backend → admin app');
 const list = await api('GET', '/api/stats/meetings', { token: memberT });
 ok(list.data.items.some((x) => x.id === meetingId && x.registrationOpen), 'the member sees the meeting open for registration');
 const v0 = (await api('GET', '/api/stats/sync', { token: adminT })).data.version;
-const person = { firstName: 'أحمد', lastName: 'بن علي', gender: 'male', wilayaCode: 31, communeId: 1134, birthDate: '1995-04-12', maritalStatus: 'married' };
+const person = { firstName: 'أحمد', lastName: 'بن علي', gender: 'male', wilayaCode: 31, communeId: 1134, birthDate: '1995-04-12', maritalStatus: 'married', childrenCount: 2 };
 const reg = await api('POST', `/api/stats/meetings/${meetingId}/register`, { token: memberT, body: person });
 ok(reg.status === 201 && reg.data.item.regNo === 1, 'the member registers in the census', `#${reg.data.item?.regNo}`);
 ok(!JSON.stringify(reg.data.item.qr).includes('أحمد'), 'the QR code holds no personal data');

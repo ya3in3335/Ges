@@ -167,7 +167,7 @@ data class CellLabels(val status: (String) -> String, val marital: (String) -> S
 @Composable
 fun exportHeaders() = listOf(
     R.string.st_reg_no, R.string.st_first_name, R.string.st_last_name, R.string.st_gender_dist, R.string.st_wilaya, R.string.st_commune, R.string.st_sec_birth,
-    R.string.st_sec_marital, R.string.st_meeting, R.string.st_meeting_date, R.string.st_status_label, R.string.st_confirmed_at, R.string.st_by,
+    R.string.st_sec_marital, R.string.st_children_count, R.string.st_meeting, R.string.st_meeting_date, R.string.st_status_label, R.string.st_confirmed_at, R.string.st_by,
 ).map { stringResource(it) }
 
 @Composable
@@ -183,7 +183,7 @@ fun exportRow(r: Registration, l: CellLabels): List<String> = listOf(
     r.regNo.toString(), r.firstName, r.lastName, l.gender(r.gender),
     "${r.wilayaCode.toString().padStart(2, '0')} ${if (AppLocale.isFrench) r.wilayaFr ?: r.wilayaAr.orEmpty() else r.wilayaAr.orEmpty()}",
     (if (AppLocale.isFrench) r.communeFr ?: r.communeAr else r.communeAr).orEmpty(),
-    r.birthDate, l.marital(r.maritalStatus), r.meeting?.title.orEmpty(), r.meeting?.startsAt?.let(::formatDateTime).orEmpty(),
+    r.birthDate, l.marital(r.maritalStatus), r.childrenCount?.toString().orEmpty(), r.meeting?.title.orEmpty(), r.meeting?.startsAt?.let(::formatDateTime).orEmpty(),
     l.status(r.status), r.checkedInAt?.let(::formatDateTime).orEmpty(),
     listOfNotNull(r.checkedInByName, l.method(r.checkinMethod).takeIf { it.isNotEmpty() }).joinToString(" · "),
 )
@@ -221,6 +221,7 @@ fun RecordScreen(id: String, back: () -> Unit, vm: RecordVm = hiltViewModel()) {
                         Field(stringResource(R.string.st_commune), r.communeAr.orEmpty())
                         Field(stringResource(R.string.st_sec_birth), r.birthDate)
                         Field(stringResource(R.string.st_sec_marital), maritalLabel(r.maritalStatus))
+                        r.childrenCount?.let { Field(stringResource(R.string.st_children_count), it.toString()) }
                         Field(stringResource(R.string.st_gender_dist), genderLabel(r.gender))
                         HorizontalDivider(color = StatsColors.Line)
                         r.checkedInAt?.let { Field(stringResource(R.string.st_confirmed_at), formatDateTime(it)) }

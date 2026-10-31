@@ -51,10 +51,14 @@ class CensusLogicTest {
 
     @Test fun formReportsEveryMissingFieldThenProducesTheRequest() {
         val f = CensusFormState()
-        assertEquals(Field.entries.toSet(), f.errors(geo))
+        // Children are asked only once "married" is chosen.
+        assertEquals(Field.entries.toSet() - Field.CHILDREN, f.errors(geo))
         assertNull(f.toInput(geo))
         f.firstName = " أحمد "; f.lastName = "بن علي"; f.wilaya = 31; f.commune = geo.communesOf(16).first().id
         f.day = 12; f.month = 4; f.year = 1995; f.marital = "married"; f.meetingId = "m1"
+        // Married: the number of children (the wife counted with them) is required.
+        assertEquals(setOf(Field.COMMUNE, Field.CHILDREN), f.errors(geo))
+        f.children = "3"
         // A commune from another wilaya is refused.
         assertEquals(setOf(Field.COMMUNE), f.errors(geo))
         f.commune = geo.communesOf(31).first().id
@@ -62,6 +66,10 @@ class CensusLogicTest {
         assertEquals("أحمد", input.firstName)
         assertEquals("1995-04-12", input.birthDate)
         assertNull(input.gender)
+        assertEquals(3, input.childrenCount)
+        // Not married: no children count is sent.
+        f.marital = "single"
+        assertNull(f.toInput(geo)!!.childrenCount)
         // The profile form does not ask for a meeting.
         assertFalse(Field.MEETING in CensusFormState(requireMeeting = false).errors(geo))
     }

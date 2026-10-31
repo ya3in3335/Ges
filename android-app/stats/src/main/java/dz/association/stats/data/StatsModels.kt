@@ -70,6 +70,8 @@ import kotlinx.serialization.Serializable
     val communeFr: String? = null,
     val birthDate: String,
     val maritalStatus: String,
+    /** Only for married people; the wife is counted with the children. */
+    val childrenCount: Int? = null,
     /** registered · present · late · absent · cancelled */
     val status: String,
     val checkedInAt: Long? = null,
@@ -96,6 +98,7 @@ import kotlinx.serialization.Serializable
     val communeId: Int,
     val birthDate: String,
     val maritalStatus: String,
+    val childrenCount: Int? = null,
 )
 
 @Serializable data class ProfileDraft(
@@ -106,6 +109,7 @@ import kotlinx.serialization.Serializable
     val communeId: Int? = null,
     val birthDate: String? = null,
     val maritalStatus: String? = null,
+    val childrenCount: Int? = null,
 )
 @Serializable data class ProfileResponse(val profile: ProfileDraft)
 
@@ -141,6 +145,7 @@ import kotlinx.serialization.Serializable
     val communeId: Int? = null,
     val birthDate: String? = null,
     val maritalStatus: String? = null,
+    val childrenCount: Int? = null,
     val status: String? = null,
 )
 

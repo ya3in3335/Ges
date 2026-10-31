@@ -68,10 +68,16 @@ const personSchema = z.object({
   communeId: z.number().int().positive(),
   birthDate: DATE,
   maritalStatus: z.enum(['single', 'married', 'divorced', 'widowed']),
+  // Asked only when married; the wife is counted with the children.
+  childrenCount: z.number().int().min(0).max(30).nullish(),
 });
 type Person = z.infer<typeof personSchema>;
 
+/** Children are recorded only for married people (required then), never otherwise. */
+const childrenOf = (p: Person) => (p.maritalStatus === 'married' ? p.childrenCount ?? null : null);
+
 function checkPerson(p: Person, now: number) {
+  if (p.maritalStatus === 'married' && (p.childrenCount === null || p.childrenCount === undefined)) throw badRequest('children_required');
   if (!communeInWilaya(p.communeId, p.wilayaCode)) throw badRequest('invalid_commune');
   if (!validBirthDate(p.birthDate, now)) throw badRequest('invalid_birth_date');
 }
@@ -109,7 +115,7 @@ interface MeetingRow {
 
 interface RegRow {
   id: string; meeting_id: string; reg_no: number; user_id: string | null; first_name: string; last_name: string;
-  gender: string | null; wilaya_code: number; commune_id: number; birth_date: string; marital_status: string;
+  gender: string | null; wilaya_code: number; commune_id: number; birth_date: string; marital_status: string; children_count: number | null;
   person_key: string; status: string; checkin_nonce: string; checked_in_at: number | null; checked_in_by: string | null;
   checkin_method: string | null; source: string; created_at: number; updated_at: number;
   meeting_title?: string; meeting_starts_at?: number; meeting_location?: string; meeting_status?: string; checker_name?: string | null;
@@ -145,7 +151,7 @@ function regDto(r: RegRow) {
     id: r.id, meetingId: r.meeting_id, regNo: r.reg_no, firstName: r.first_name, lastName: r.last_name, gender: r.gender,
     wilayaCode: r.wilaya_code, wilayaAr: w?.ar ?? null, wilayaFr: w?.fr ?? null,
     communeId: r.commune_id, communeAr: c?.ar ?? null, communeFr: c?.fr ?? null,
-    birthDate: r.birth_date, maritalStatus: r.marital_status, status: r.status,
+    birthDate: r.birth_date, maritalStatus: r.marital_status, childrenCount: r.children_count ?? null, status: r.status,
     checkedInAt: r.checked_in_at, checkinMethod: r.checkin_method, source: r.source, hasAccount: !!r.user_id,
     createdAt: r.created_at, updatedAt: r.updated_at,
     meeting: r.meeting_title !== undefined ? { title: r.meeting_title, startsAt: r.meeting_starts_at, location: r.meeting_location, status: r.meeting_status } : undefined,
@@ -192,18 +198,18 @@ async function createRegistration(ctx: Ctx, m: MeetingRow, p: Person, userId: st
     if (reuse) {
       await db.prepare(
         `UPDATE stats_registrations SET user_id = COALESCE(?, user_id), first_name = ?, last_name = ?, gender = ?, wilaya_code = ?, commune_id = ?, birth_date = ?,
-           marital_status = ?, person_key = ?, status = 'registered', checkin_nonce = ?, checked_in_at = NULL, checked_in_by = NULL, checkin_method = NULL,
+           marital_status = ?, children_count = ?, person_key = ?, status = 'registered', checkin_nonce = ?, checked_in_at = NULL, checked_in_by = NULL, checkin_method = NULL,
            source = ?, created_by = ?, updated_at = ? WHERE id = ? AND status = 'cancelled'`,
-      ).bind(userId, p.firstName, p.lastName, p.gender ?? null, p.wilayaCode, p.communeId, p.birthDate, p.maritalStatus, key, nonce,
+      ).bind(userId, p.firstName, p.lastName, p.gender ?? null, p.wilayaCode, p.communeId, p.birthDate, p.maritalStatus, childrenOf(p), key, nonce,
         source, ctx.user!.id, ctx.now, reuse.id).run();
     } else {
       await db.prepare(
         `INSERT INTO stats_registrations (id, meeting_id, reg_no, user_id, first_name, last_name, gender, wilaya_code, commune_id, birth_date,
-           marital_status, person_key, status, checkin_nonce, source, created_by, created_at, updated_at)
+           marital_status, children_count, person_key, status, checkin_nonce, source, created_by, created_at, updated_at)
          SELECT ?1, ?2, (SELECT COALESCE(MAX(reg_no), 0) + 1 FROM stats_registrations WHERE meeting_id = ?2), ?3, ?4, ?5, ?6, ?7, ?8, ?9,
-           ?10, ?11, 'registered', ?12, ?13, ?14, ?15, ?15`,
+           ?10, ?16, ?11, 'registered', ?12, ?13, ?14, ?15, ?15`,
       ).bind(id, m.id, userId, p.firstName, p.lastName, p.gender ?? null, p.wilayaCode, p.communeId, p.birthDate,
-        p.maritalStatus, key, nonce, source, ctx.user!.id, ctx.now).run();
+        p.maritalStatus, key, nonce, source, ctx.user!.id, ctx.now, childrenOf(p)).run();
     }
   } catch (e) {
     // A concurrent request registered the same person a moment earlier.
@@ -215,7 +221,7 @@ async function createRegistration(ctx: Ctx, m: MeetingRow, p: Person, userId: st
 
 // ───────────── Members ─────────────
 
-interface ProfileRow { first_name: string; last_name: string; gender: string | null; marital_status: string | null; wilaya_code: number | null; commune_id: number | null; birth_date: string | null }
+interface ProfileRow { first_name: string; last_name: string; gender: string | null; marital_status: string | null; children_count: number | null; wilaya_code: number | null; commune_id: number | null; birth_date: string | null }
 
 /** The member's census answers, from the profile shared with the lectures form (or the account name). */
 export async function myStatsProfile(ctx: Ctx): Promise<Response> {
@@ -229,6 +235,7 @@ export async function myStatsProfile(ctx: Ctx): Promise<Response> {
     profile: {
       firstName: p?.first_name ?? first, lastName: p?.last_name ?? rest.join(' '), gender: p?.gender ?? null,
       wilayaCode: p?.wilaya_code ?? null, communeId: p?.commune_id ?? null, birthDate: p?.birth_date ?? null, maritalStatus: p?.marital_status ?? null,
+      childrenCount: p?.children_count ?? null,
     },
   });
 }
@@ -236,12 +243,12 @@ export async function myStatsProfile(ctx: Ctx): Promise<Response> {
 function saveProfile(ctx: Ctx, userId: string, p: Person): D1PreparedStatement {
   const wilaya = WILAYAS.get(p.wilayaCode)!.ar;
   return ctx.env.DB.prepare(
-    `INSERT INTO member_profiles (user_id, first_name, last_name, gender, birth_year, wilaya, marital_status, wilaya_code, commune_id, birth_date, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO member_profiles (user_id, first_name, last_name, gender, birth_year, wilaya, marital_status, wilaya_code, commune_id, birth_date, children_count, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(user_id) DO UPDATE SET first_name = excluded.first_name, last_name = excluded.last_name, gender = COALESCE(excluded.gender, gender),
        birth_year = excluded.birth_year, wilaya = excluded.wilaya, marital_status = excluded.marital_status, wilaya_code = excluded.wilaya_code,
-       commune_id = excluded.commune_id, birth_date = excluded.birth_date, updated_at = excluded.updated_at`,
-  ).bind(userId, p.firstName, p.lastName, p.gender ?? null, Number(p.birthDate.slice(0, 4)), wilaya, p.maritalStatus, p.wilayaCode, p.communeId, p.birthDate, ctx.now);
+       commune_id = excluded.commune_id, birth_date = excluded.birth_date, children_count = excluded.children_count, updated_at = excluded.updated_at`,
+  ).bind(userId, p.firstName, p.lastName, p.gender ?? null, Number(p.birthDate.slice(0, 4)), wilaya, p.maritalStatus, p.wilayaCode, p.communeId, p.birthDate, childrenOf(p), ctx.now);
 }
 
 export async function updateMyStatsProfile(ctx: Ctx): Promise<Response> {
@@ -558,6 +565,7 @@ export async function adminUpdateRegistration(ctx: Ctx): Promise<Response> {
     firstName: b.firstName ?? r.first_name, lastName: b.lastName ?? r.last_name, gender: b.gender === undefined ? (r.gender as Person['gender']) : b.gender,
     wilayaCode: b.wilayaCode ?? r.wilaya_code, communeId: b.communeId ?? r.commune_id, birthDate: b.birthDate ?? r.birth_date,
     maritalStatus: (b.maritalStatus ?? r.marital_status) as Person['maritalStatus'],
+    childrenCount: b.childrenCount === undefined ? r.children_count : b.childrenCount,
   };
   checkPerson(p, ctx.now);
   const status = b.status ?? r.status;
@@ -568,9 +576,9 @@ export async function adminUpdateRegistration(ctx: Ctx): Promise<Response> {
   try {
     await ctx.env.DB.batch([
       ctx.env.DB.prepare(
-        `UPDATE stats_registrations SET first_name = ?, last_name = ?, gender = ?, wilaya_code = ?, commune_id = ?, birth_date = ?, marital_status = ?,
+        `UPDATE stats_registrations SET first_name = ?, last_name = ?, gender = ?, wilaya_code = ?, commune_id = ?, birth_date = ?, marital_status = ?, children_count = ?,
            person_key = ?, status = ?, checked_in_at = ?, checked_in_by = ?, checkin_method = ?, updated_at = ? WHERE id = ?`,
-      ).bind(p.firstName, p.lastName, p.gender ?? null, p.wilayaCode, p.communeId, p.birthDate, p.maritalStatus, key, status,
+      ).bind(p.firstName, p.lastName, p.gender ?? null, p.wilayaCode, p.communeId, p.birthDate, p.maritalStatus, childrenOf(p), key, status,
         attended ? (wasAttended ? r.checked_in_at : ctx.now) : null,
         attended ? (wasAttended ? r.checked_in_by : ctx.user!.id) : null,
         attended ? (wasAttended ? r.checkin_method : 'manual') : null, ctx.now, r.id),

@@ -33,7 +33,7 @@ import dz.association.stats.data.ProfileDraft
 import java.util.Calendar
 import java.util.TimeZone
 
-enum class Field { FIRST_NAME, LAST_NAME, WILAYA, COMMUNE, BIRTH_DATE, MARITAL, MEETING }
+enum class Field { FIRST_NAME, LAST_NAME, WILAYA, COMMUNE, BIRTH_DATE, MARITAL, CHILDREN, MEETING }
 
 /** Validation shared by both apps (the server checks everything again). */
 object CensusValidation {
@@ -70,6 +70,8 @@ class CensusFormState(requireMeeting: Boolean = true) {
     var month by mutableStateOf<Int?>(null)
     var year by mutableStateOf<Int?>(null)
     var marital by mutableStateOf<String?>(null)
+    /** Asked only when married (the wife is counted with the children). */
+    var children by mutableStateOf("")
     var meetingId by mutableStateOf<String?>(null)
     var showErrors by mutableStateOf(false)
     private val needsMeeting = requireMeeting
@@ -80,6 +82,7 @@ class CensusFormState(requireMeeting: Boolean = true) {
         if (gender == null) gender = p.gender
         if (wilaya == null) { wilaya = p.wilayaCode; commune = p.communeId }
         if (marital == null) marital = p.maritalStatus
+        if (children.isBlank()) children = p.childrenCount?.toString().orEmpty()
         p.birthDate?.split('-')?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 3 && year == null }?.let { (y, m, d) -> year = y; month = m; day = d }
     }
 
@@ -90,16 +93,20 @@ class CensusFormState(requireMeeting: Boolean = true) {
         if (commune == null || (geo != null && geo.commune(commune)?.wilaya != wilaya)) add(Field.COMMUNE)
         if (!CensusValidation.dateValid(day, month, year)) add(Field.BIRTH_DATE)
         if (marital !in CensusValidation.MARITAL) add(Field.MARITAL)
+        if (marital == "married" && children.toIntOrNull()?.let { it in 0..30 } != true) add(Field.CHILDREN)
         if (needsMeeting && meetingId == null) add(Field.MEETING)
     }
 
     /** The values to send, or null when something is missing or invalid. */
     fun toInput(geo: GeoData?): PersonInput? {
         if (errors(geo).isNotEmpty()) return null
-        return PersonInput(firstName.trim(), lastName.trim(), gender, wilaya!!, commune!!, CensusValidation.birthDate(day!!, month!!, year!!), marital!!)
+        return PersonInput(
+            firstName.trim(), lastName.trim(), gender, wilaya!!, commune!!, CensusValidation.birthDate(day!!, month!!, year!!), marital!!,
+            if (marital == "married") children.toInt() else null,
+        )
     }
 
-    fun clearPerson() { firstName = ""; lastName = ""; gender = null; day = null; month = null; year = null; marital = null; showErrors = false }
+    fun clearPerson() { firstName = ""; lastName = ""; gender = null; day = null; month = null; year = null; marital = null; children = ""; showErrors = false }
 }
 
 /**
@@ -163,6 +170,15 @@ fun CensusForm(state: CensusFormState, geo: GeoData, meetings: List<Meeting>?, m
             SectionTitle(stringResource(R.string.st_sec_marital), Icons.Outlined.FamilyRestroom)
             ChoiceChips(CensusValidation.MARITAL, state.marital, { maritalLabel(it) }, { state.marital = it })
             if (Field.MARITAL in err) Text(required, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            androidx.compose.animation.AnimatedVisibility(state.marital == "married") {
+                OutlinedTextField(
+                    state.children, { v -> state.children = v.filter(Char::isDigit).take(2) },
+                    label = { Text(stringResource(R.string.st_children_count)) }, singleLine = true, isError = Field.CHILDREN in err,
+                    supportingText = { Text(stringResource(if (Field.CHILDREN in err) R.string.st_err_children else R.string.st_children_hint)) },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth().testTag("census_children"),
+                )
+            }
         }
         if (meetings != null) StatsCard {
             SectionTitle(stringResource(R.string.st_sec_meeting), Icons.AutoMirrored.Outlined.EventNote)

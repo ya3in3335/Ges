@@ -7,7 +7,7 @@ let admin: { token: string; id: string; refresh: string };
 const H = 3600_000;
 const MIN = 60_000;
 // Oran (31) / Sidi Chami (commune 1134) in the bundled geography data.
-const person = { firstName: 'أحمد', lastName: 'بن علي', gender: 'male', wilayaCode: 31, communeId: 1134, birthDate: '1995-04-12', maritalStatus: 'married' };
+const person = { firstName: 'أحمد', lastName: 'بن علي', gender: 'male', wilayaCode: 31, communeId: 1134, birthDate: '1995-04-12', maritalStatus: 'married', childrenCount: 2 };
 
 /** Census administration only works from a bot-activated (long-lived) session; tests mark it directly. */
 const activate = (userId: string) => app.db.raw.prepare('UPDATE auth_sessions SET long_lived = 1 WHERE user_id = ?').run(userId);
@@ -125,7 +125,7 @@ describe('statistics: registration', () => {
 
     const r = await app.req('POST', `/api/stats/meetings/${id}/register`, { token: u.token, body: person });
     expect(r.status).toBe(201);
-    expect(r.body.item).toMatchObject({ regNo: 1, status: 'registered', wilayaAr: 'وهران', firstName: 'أحمد' });
+    expect(r.body.item).toMatchObject({ regNo: 1, status: 'registered', wilayaAr: 'وهران', firstName: 'أحمد', childrenCount: 2 });
     // The QR code carries the registration id and a signature only — no personal data.
     expect(r.body.item.qr).toMatch(/^AST1\.[0-9a-f-]{36}\.[\w-]{27}$/);
     expect(r.body.item.qr).not.toContain('أحمد');
@@ -140,7 +140,11 @@ describe('statistics: registration', () => {
 
     // The form is prefilled next time.
     const prof = await app.req('GET', '/api/stats/me/profile', { token: u.token });
-    expect(prof.body.profile).toMatchObject({ firstName: 'أحمد', wilayaCode: 31, communeId: 1134, birthDate: '1995-04-12' });
+    expect(prof.body.profile).toMatchObject({ firstName: 'أحمد', wilayaCode: 31, communeId: 1134, birthDate: '1995-04-12', childrenCount: 2 });
+    // Not married: no children count is kept.
+    const s2 = await app.register(12);
+    const single = await app.req('POST', `/api/stats/meetings/${id}/register`, { token: s2.token, body: { ...person, firstName: 'سليم', maritalStatus: 'single', childrenCount: 3 } });
+    expect(single.body.item.childrenCount).toBeNull();
   });
 
   it('rejects a commune outside the chosen wilaya, invalid dates and future birth dates', async () => {
@@ -151,6 +155,9 @@ describe('statistics: registration', () => {
     expect((await bad({ birthDate: '1995-02-30' })).body.error).toBe('invalid_birth_date');
     expect((await bad({ birthDate: '2030-01-01' })).body.error).toBe('invalid_birth_date');
     expect((await bad({ maritalStatus: 'other' })).status).toBe(400);
+    // Married: the number of children (the wife counted with them) is required.
+    expect((await bad({ childrenCount: null })).body.error).toBe('children_required');
+    expect((await bad({ childrenCount: 31 })).status).toBe(400);
     expect((await bad({ firstName: '' })).status).toBe(400);
   });
 

@@ -159,6 +159,7 @@ fun statsError(e: AppError): String = when ((e as? AppError.Api)?.code) {
     "insufficient_role" -> stringResource(R.string.st_err_insufficient_role)
     "already_checked_in" -> stringResource(R.string.st_already_checked)
     "approval_not_configured" -> stringResource(R.string.st_err_approval_not_configured)
+    "children_required" -> stringResource(R.string.st_err_children_required)
     "cannot_remove_self" -> stringResource(R.string.st_err_cannot_remove_self)
     else -> errorMessage(e)
 }

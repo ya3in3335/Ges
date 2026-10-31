@@ -238,7 +238,7 @@ class RecordVm @Inject constructor(private val api: StatsApi, geo: Geo, private 
     fun startEdit(r: Registration) {
         form.showErrors = false
         form.firstName = r.firstName; form.lastName = r.lastName; form.gender = r.gender
-        form.wilaya = r.wilayaCode; form.commune = r.communeId; form.marital = r.maritalStatus
+        form.wilaya = r.wilayaCode; form.commune = r.communeId; form.marital = r.maritalStatus; form.children = r.childrenCount?.toString().orEmpty()
         r.birthDate.split('-').mapNotNull { it.toIntOrNull() }.takeIf { it.size == 3 }?.let { (y, m, d) -> form.year = y; form.month = m; form.day = d }
         status.value = r.status
     }
@@ -248,7 +248,7 @@ class RecordVm @Inject constructor(private val api: StatsApi, geo: Geo, private 
         val p = form.toInput(geo) ?: return
         viewModelScope.launch {
             busy.value = true; actionError.value = null
-            when (val r = apiCall { api.updateRegistration(id, RegistrationPatch(p.firstName, p.lastName, p.gender, p.wilayaCode, p.communeId, p.birthDate, p.maritalStatus, status.value)).item }) {
+            when (val r = apiCall { api.updateRegistration(id, RegistrationPatch(p.firstName, p.lastName, p.gender, p.wilayaCode, p.communeId, p.birthDate, p.maritalStatus, p.childrenCount, status.value)).item }) {
                 is Result.Ok -> { set(r.value); poller.poke(); onDone() }
                 is Result.Err -> actionError.value = r.error
             }
